@@ -438,10 +438,6 @@ class ImageDataPipeline(object):
             cfg = {
                 'resize': [self.image_size[0], self.image_size[1]],
                 'scale': 1 / 255.,
-                'hue_delta': 0.1,
-                'horizontal_flip': True,
-                'width_shift_range': 0.1,
-                'height_shift_range': 0.1
             }
             image_processing_fn = functools.partial(self._image_label_preprocess, **cfg)
             result["training"] = self.get_baseline_dataset(image_label_result["training"]["filenames"],
