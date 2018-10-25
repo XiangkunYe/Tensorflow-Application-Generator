@@ -151,6 +151,10 @@ class CnnModelGenerator(object):
 # ---------------------------------------Inception V3 Model-------------------------------------------------
 class InceptionModelGenerator(object):
 
+    @staticmethod
+    def get_optimizer(learning_rate):
+        return tf.keras.optimizers.Adam(lr=learning_rate)
+
     def __init__(self, model_file, num_classes, input_image_size):
         self.inception_model = None
         if not gfile.Exists(model_file) or input_image_size != (256, 256, 3):
