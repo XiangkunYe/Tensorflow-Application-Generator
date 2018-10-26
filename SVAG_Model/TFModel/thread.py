@@ -33,7 +33,7 @@ class TaskManager(object, metaclass=Singleton):
             'progress': 0,
             'userId': task_info['userId'],
             'projectId': task_info['projectId'],
-            'userDir': task_info['userDir'],
+            'projectDir': task_info['projectDir'],
             'trainType': task_info['trainType'],
             'state': 'pending',
             'modelPath': ''
@@ -57,7 +57,7 @@ class TaskThread(Thread):
             self.task_id = self.task_queue.get()
             TaskManager().task_dict[self.task_id]['state'] = 'processing'
             method = TaskManager().task_dict[self.task_id]['trainType']
-            user_dir = TaskManager().task_dict[self.task_id]['userDir']
+            user_dir = TaskManager().task_dict[self.task_id]['projectDir']
             print("start training (thread:%s)" % threading.current_thread().name)
             model_file_path = train(self.task_id, method, user_dir)
             print("finish (thread:%s)" % threading.current_thread().name)

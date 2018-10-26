@@ -14,6 +14,10 @@ from tensorflow.python.keras import backend as K
 class UnetModelGenerator(object):
 
     @staticmethod
+    def get_optimizer(learning_rate):
+        return tf.keras.optimizers.Adam(lr=learning_rate)
+
+    @staticmethod
     def dice_coeff(y_true, y_pred):
         smooth = 1.
         # Flatten

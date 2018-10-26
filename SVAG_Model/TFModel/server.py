@@ -15,7 +15,7 @@ class SelfHTTPHandler(BaseHTTPRequestHandler):
         # the values of post_data[key_name] is a list of values with key_name
         result['userId'] = post_data.get('userId', [''])[0]
         result['projectId'] = post_data.get('projectId', [''])[0]
-        result['userDir'] = post_data.get('userDir', [''])[0]
+        result['projectDir'] = post_data.get('projectDir', [''])[0]
         result['trainType'] = post_data.get('trainType', [''])[0]
         result['taskId'] = str(uuid.uuid1())
         result['state'] = 'initialize'
