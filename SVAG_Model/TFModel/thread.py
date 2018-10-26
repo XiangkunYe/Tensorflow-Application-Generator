@@ -1,5 +1,4 @@
 import threading
-import time
 from threading import Thread
 from queue import Queue
 
@@ -36,9 +35,14 @@ class TaskManager(object, metaclass=Singleton):
             'projectId': task_info['projectId'],
             'userDir': task_info['userDir'],
             'trainType': task_info['trainType'],
-            'state': 'pending'
+            'state': 'pending',
+            'modelPath': ''
         }
+        print("recv and add a new task: {}".format(task_info['taskId']))
         self.task_queue.put(task_info['taskId'])
+
+
+from train import train
 
 
 class TaskThread(Thread):
@@ -52,6 +56,11 @@ class TaskThread(Thread):
         while True:
             self.task_id = self.task_queue.get()
             TaskManager().task_dict[self.task_id]['state'] = 'processing'
-            time.sleep(30)
+            method = TaskManager().task_dict[self.task_id]['trainType']
+            user_dir = TaskManager().task_dict[self.task_id]['userDir']
+            print("start training (thread:%s)" % threading.current_thread().name)
+            model_file_path = train(self.task_id, method, user_dir)
+            print("finish (thread:%s)" % threading.current_thread().name)
             TaskManager().task_dict[self.task_id]['state'] = 'done'
+            TaskManager().task_dict[self.task_id]['modelPath'] = model_file_path
             self.task_queue.task_done()

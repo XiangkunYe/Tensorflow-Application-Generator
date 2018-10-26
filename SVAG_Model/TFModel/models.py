@@ -158,6 +158,10 @@ class InceptionModelGenerator(object):
     def __init__(self, model_file, num_classes, input_image_size):
         self.inception_model = None
         if not gfile.Exists(model_file) or input_image_size != (256, 256, 3):
+            print("need download the Inception V3 Model")
+            print(input_image_size)
+            print(input_image_size != (256, 256, 3))
+            print(gfile.Exists(model_file))
             inception = InceptionV3(weights='imagenet', input_shape=input_image_size)
             self.inception_model = models.Model(inputs=inception.input, outputs=inception.get_layer('avg_pool').output)
         else:
