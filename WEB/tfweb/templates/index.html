@@ -1,0 +1,20 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+<h1>Local Home</h1>
+
+  <p>Welcome to <em>tensorflow application wep application</em>, a very basic Django website .</p>
+
+<h2>Dynamic content</h2>
+
+  <p>The web has the following record counts:</p>
+  <ul>
+    <li><strong>user:</strong> {{ num_user }}</li>
+    <li><strong>project:</strong> {{ num_project }}</li>
+    <li><strong>model:</strong> {{ num_model }}</li>
+    <li><strong>task:</strong> {{ num_task }}</li>
+  </ul>
+<p>You have visited this page {{ num_visits }}{% if num_visits == 1 %} time{% else %} times{% endif %}.</p>
+<a href="{% url 'upload' %}">upload file</a>
+{% endblock %}
+
