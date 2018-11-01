@@ -1,0 +1,13 @@
+body {
+    background: url(https://images.unsplash.com/photo-1496047311392-22bec9423e0a?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=d13480ad4be8318c071d71947b822565&auto=format&fit=crop&w=1350&q=80);
+    background-size: cover;
+    background-position: center;
+}
+form{
+   position:fixed;
+   top:50%;
+   left:30%;
+   width:250px;
+}
+
+

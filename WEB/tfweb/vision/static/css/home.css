@@ -1,0 +1,21 @@
+body{
+    text-align: center;
+}
+h1{
+    font-family: 'Open Sans', sans-serif;
+    color: white;
+    text-align: center;
+    font-size: 6em;
+}
+p,h2{
+    color: white;
+
+}
+p{
+    font-size: 1.5em;
+}
+#p1{
+    color: white;
+    text-align: center;
+    font-size: 2em;
+}

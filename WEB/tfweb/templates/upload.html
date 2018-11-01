@@ -1,0 +1,26 @@
+{% extends "base_generic.html" %}
+
+
+
+{% block content %}
+{% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/upload.css' %}">
+<head>
+
+
+    <title>login_from</title>
+</head>
+<body>
+
+
+ <form method="post" enctype="multipart/form-data".>
+    {% csrf_token %}
+    {{ form }}
+
+     <button class="btn btn-default btn-lg" type="submit">Submit</button>
+ </form>
+
+
+</body>
+{% endblock %}
+
