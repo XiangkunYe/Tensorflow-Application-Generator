@@ -5,6 +5,7 @@ import time
 import os
 import logging
 import sys
+import subprocess
 from thread import TaskManager
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
@@ -135,7 +136,10 @@ def server_run(server_class=HTTPServer, handler_class=SelfHTTPHandler, port=80):
     httpd.serve_forever()
 
 
-def main():
+def start():
+    if os.path.exists(os.path.join(LOCAL_PATH, PID_FILE)):
+        print("server already started. you need stop it first or use restart")
+        return
     # create log dir if is not existed
     try:
         if not os.path.exists(os.path.join(LOCAL_PATH, LOG_DIR)):
@@ -170,8 +174,40 @@ def main():
         except Exception as e:
             print("[server start]error starting server: %s" % e, file=sys.stdout)
             return -1
-    
+
+
+def stop():
+    if not os.path.exists(os.path.join(LOCAL_PATH, PID_FILE)):
+        print("[server]WARNING!no pid file found.if you already start the server, please use'ps -ax|grep python server.py start'to find the server process's pid and kill it!")
+    else:
+        try:
+            with open(os.path.join(LOCAL_PATH, PID_FILE), 'r') as file:
+                pid = file.read()
+                pid = pid[:-1]
+                cmd = ['kill', '-9', pid]
+                subprocess.check_call(cmd)
+                print("stop server....")
+            os.remove(os.path.join(LOCAL_PATH, PID_FILE))
+        except OSError as e:
+            print("[server]error killing process: %s" % e)
+            print("[server]ERROR!no pid file found.please use'ps -ax|grep python server.py start'to find the server process's pid and kill it!")
+        except subprocess.CalledProcessError as e:
+            print("[server]error killing process: %s" % e)
+            print("[server]ERROR!no pid file found.please use'ps -ax|grep python server.py start'to find the server process's pid and kill it!")
 
 
 if __name__ == '__main__':
-   main()
+    counts = len(sys.argv)
+    if counts < 2:
+        print("[server]invalid parameters, you should use commands below:\npython server.py start\npython server.py stop\npython server.py restart")
+    else:
+        operation = sys.argv[1]
+        if operation == 'start':
+            start()
+        elif operation == 'stop':
+            stop()
+        elif operation == 'restart':
+            stop()
+            start()
+        else:
+            print("[server]invalid parameters, you should use commands below:\npython server.py start\npython server.py stop\npython server.py restart")
