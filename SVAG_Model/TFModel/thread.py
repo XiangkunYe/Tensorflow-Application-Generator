@@ -1,4 +1,5 @@
 import threading
+import logging
 from threading import Thread
 from queue import Queue
 
@@ -17,10 +18,20 @@ class TaskManager(object, metaclass=Singleton):
         self.task_queue = Queue()
         self.thread_num = thread_num
         self.__init_threading_pool(self.thread_num)
+        self.__init_task_logger()
         self.task_dict = {}
 
     def get_task_info(self, task_id):
         return self.task_dict.get(task_id, {})
+
+    def __init_task_logger(self):
+        task_logger = logging.getLogger('task')
+        task_logger.setLevel(logging.DEBUG)
+        fh = logging.FileHandler('taskmanager.log')
+        fh.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(threadname)s - %(message)s')
+        fh.setFormatter(formatter)
+        task_logger.addHandler(fh)
 
     def __init_threading_pool(self, thread_num):
         for i in range(thread_num):
@@ -51,16 +62,18 @@ class TaskThread(Thread):
         self.task_queue = task_queue
         self.daemon = True
         self.task_id = ''
+        self.logger = logging.getLogger('task')
 
     def run(self):
         while True:
             self.task_id = self.task_queue.get()
+            self.logger.info("get task({})".format(self.task_id))
             TaskManager().task_dict[self.task_id]['state'] = 'processing'
             method = TaskManager().task_dict[self.task_id]['trainType']
             user_dir = TaskManager().task_dict[self.task_id]['projectDir']
-            print("start training (thread:%s)" % threading.current_thread().name)
+            self.logger.info("start training...")
             model_file_path = train(self.task_id, method, user_dir)
-            print("finish (thread:%s)" % threading.current_thread().name)
+            self.logger.info("training finished")
             TaskManager().task_dict[self.task_id]['state'] = 'done'
             TaskManager().task_dict[self.task_id]['modelPath'] = model_file_path
             self.task_queue.task_done()
