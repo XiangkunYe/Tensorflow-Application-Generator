@@ -19,7 +19,7 @@ class TaskManager(object, metaclass=Singleton):
         self.task_queue = Queue()
         self.thread_num = thread_num
         self.__init_threading_pool(self.thread_num)
-        self.__init_task_logger()
+        #self.__init_task_logger()
         self.task_dict = {}
 
     def get_task_info(self, task_id):

@@ -12,6 +12,7 @@ from urllib.parse import parse_qs, urlparse
 # daemonize process is not supported on Windows
 if platform.system() != "Windows":
     import daemon
+    import daemon.pidfile
     import lockfile
 
 PORT = 46176
@@ -21,7 +22,8 @@ SERVER_LOG = 'server.log'
 TASK_MANAGER_LOG = 'taskmanager.log'
 LOG_DIR = 'log'
 PID_FILE = 'TFModel_server.pid'
-
+SERVER_OUTPUT_LOG = 'server_outputs.log'
+SERVER_LOGGER = logging.getLogger('main_server')
 
 # Process HTTP Requests
 class SelfHTTPHandler(BaseHTTPRequestHandler):
@@ -95,68 +97,81 @@ class SelfHTTPHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(result).encode())
 
 
-def initialize_server_logger():
+def initialize_logger():
     # Step 1. create or open server log file and record server start time
     try:
-        with open(os.path.join(LOCAL_PATH, LOG_DIR, SERVER_LOG), 'w+') as file:
+        with open(os.path.join(LOCAL_PATH, LOG_DIR, SERVER_LOG), 'a+') as file:
             file.write("*******************start server at {}*******************\n".format(
                 time.asctime(time.localtime(time.time()))))
     except EnvironmentError as e:
-        print("[initialize_server_logger]error opening server log file: %s" % e)
-        return False
+        print("[initialize_server_logger]error opening server log file: %s" % e, file=sys.stdout)
+        return False, None, None
 
     # Step 2. initialize and config server logger with name 'main_server'
     server_logger = logging.getLogger('main_server')
     server_logger.setLevel(logging.DEBUG)
     fh = logging.FileHandler(os.path.join(LOCAL_PATH, LOG_DIR, SERVER_LOG))
-    fh.setLevel(logging.DEBUG)
+    fh.setLevel(logging.INFO)
     server_formatter = logging.Formatter('%(asctime)s - %(clientip)s - %(message)s')
     fh.setFormatter(server_formatter)
     server_logger.addHandler(fh)
 
-    return True
+    # Step 3. initialize and config task logger
+    task_logger = logging.getLogger('task_manager')
+    task_logger.setLevel(logging.DEBUG)
+    th = logging.FileHandler(os.path.join(LOCAL_PATH, LOG_DIR, TASK_MANAGER_LOG))
+    th.setLevel(logging.INFO)
+    task_formatter = logging.Formatter('%(asctime)s - %(threadNmae)s - %(message)s')
+    th.setFormatter(task_formatter)
+    task_logger.addHandler(th)
+
+    return True, fh, th
 
 
 def server_run(server_class=HTTPServer, handler_class=SelfHTTPHandler, port=80):
     server_address = ('', port)
     httpd = server_class(server_address, handler_class)
-    print("[server run]now serving at port:", port)
+    print("[server run]now serving at port: {}".format(port))
     httpd.serve_forever()
 
 
 def main():
-    # intialize server logger
-    success_intialize = initialize_server_logger()
-    if not success_intialize:
-        print("[server initialize]error initializing server logger")
-        return
-    print("[server initialize]initialize logger.................Success")
-    # initialize task threading pool(Singleton)
-    _ = TaskManager(THREAD_NUM)
-    print("[server initialize]initialize Task Manager...........Success")
-    # start running server, listening to PORT
-    server_run(port=PORT)
-
-
-if __name__ == '__main__':
-    # create log dir is not existed
+    # create log dir if is not existed
     try:
         if not os.path.exists(os.path.join(LOCAL_PATH, LOG_DIR)):
             os.mkdir(os.path.join(LOCAL_PATH, LOG_DIR))
     except EnvironmentError as e:
         print("[server start]error creating log dir in local path: %s" % e)
-        sys.exit(-1)
+        return -1
 
+    # intialize server logger
+    success_intialize, server_log_file, task_log_file = initialize_logger()
+    if not success_intialize:
+        print("[server initialize]error initializing server logger", file=sys.stdout)
+        return
+    print("[server initialize]initialize logger.................Success", file=sys.stdout)
+
+    # initialize task threading pool(Singleton)
+    _ = TaskManager(THREAD_NUM)
+    print("[server initialize]initialize Task Manager...........Success", file=sys.stdout)
+    
     # daemonize process is not supported on Windows
+    print("[server start]start server...")
     if platform.system() == "Windows":
-        main()
+        # start running server, listening to PORT
+        server_run(port=PORT)
     else:
         try:
-            print("[server start]start server...")
-            with daemon.DaemonContext(pidfile=lockfile.FileLock(os.path.join(LOCAL_PATH, PID_FILE)),
-                                      stdout=open(os.path.join(LOCAL_PATH, LOG_DIR, SERVER_LOG), 'w+'),
-                                      stderr=open(os.path.join(LOCAL_PATH, LOG_DIR, SERVER_LOG), 'w+')):
-                main()
+            with daemon.DaemonContext(pidfile=daemon.pidfile.PIDLockFile(os.path.join(LOCAL_PATH, PID_FILE)),
+                                      files_preserve= [server_log_file.stream,
+                                                       task_log_file.stream]
+                                      ):
+                server_run(port=PORT)
         except Exception as e:
-            print("[server start]error starting server: %s" % e)
-            sys.exit(-1)
+            print("[server start]error starting server: %s" % e, file=sys.stdout)
+            return -1
+    
+
+
+if __name__ == '__main__':
+   main()
