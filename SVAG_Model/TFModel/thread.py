@@ -13,6 +13,7 @@ class Singleton(type):
         return cls._instances[cls]
 
 
+# Class TaskManager is a Singleton
 class TaskManager(object, metaclass=Singleton):
     def __init__(self, thread_num=1):
         self.task_queue = Queue()
@@ -25,11 +26,11 @@ class TaskManager(object, metaclass=Singleton):
         return self.task_dict.get(task_id, {})
 
     def __init_task_logger(self):
-        task_logger = logging.getLogger('task')
+        task_logger = logging.getLogger('task_manager')
         task_logger.setLevel(logging.DEBUG)
         fh = logging.FileHandler('taskmanager.log')
         fh.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(asctime)s - %(threadname)s - %(message)s')
+        formatter = logging.Formatter('%(asctime)s - %(threadName)s - %(message)s')
         fh.setFormatter(formatter)
         task_logger.addHandler(fh)
 
@@ -62,7 +63,7 @@ class TaskThread(Thread):
         self.task_queue = task_queue
         self.daemon = True
         self.task_id = ''
-        self.logger = logging.getLogger('task')
+        self.logger = logging.getLogger('task_manager')
 
     def run(self):
         while True:

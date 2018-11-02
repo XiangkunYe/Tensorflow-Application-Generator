@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import os
+import logging
 from tensorflow.python.platform import gfile
 from data import ImageDataPipeline, BottleneckDataPipeline
 from models import InceptionModelGenerator, UnetModelGenerator
@@ -28,6 +29,8 @@ SAVE_ONE_LAYER_FILE = 'one_layer_weights.hdf5'
 SAVE_FINAL_MODEL_FILE = 'Classification_model.hdf5'
 SAVE_SEGMENTATION_WEIGHTS_FILE = 'Segmentation_weights.hdf5'
 SAVE_SEGMENTATION_MODEL_FILE = 'Segmentation_model.hdf5'
+
+TRAIN_LOGGER = logging.getLogger('task_manager')
 
 
 def update_progress(task_id, progress):
@@ -68,7 +71,7 @@ def get_and_cache_bottlenecks(task_id, file_dir, model_gen, image_dp):
             bottleneck_file.write(bottleneck_string)
         update_progress(task_id, ((i+0.) / len(images)) * 70.)
         if i % 100 == 0:
-            print("already output {} images' bottlenecks".format(i))
+            TRAIN_LOGGER.info("already output {} images' bottlenecks".format(i))
 
 
 def train_one_layer_model(task_id, file_dir, model_gen, bottleneck_dp):
@@ -126,14 +129,14 @@ def train_classification(task_id, file_dir):
 
     # Step 1. compute and save bottlenecks by Inception V3 Model
     update_progress(task_id, 0)
-    print("start get & cache all bottlenecks")
+    TRAIN_LOGGER.info("start get & cache all bottlenecks")
     get_and_cache_bottlenecks(task_id, file_dir, generator, image_dp)
     # Step 2. train the last layer of our model
     update_progress(task_id, 70)
-    print("start train the final layer")
+    TRAIN_LOGGER.info("start train the final layer")
     train_one_layer_model(task_id, file_dir, generator, bottleneck_dp)
     # Step 3. load the weights generated in Step 2. to our final model
-    print("training is over")
+    TRAIN_LOGGER.info("training is over")
     model = generator.get_eval_model()
     model.load_weights(weights_file, by_name=True)
     # TO DO: save model as android format...
