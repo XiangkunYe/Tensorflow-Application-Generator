@@ -1,11 +1,16 @@
 import uuid
 import json
+import daemon
+import lockfile
+import os
+import sys
 from thread import TaskManager
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
 
 PORT = 46176
 THREAD_NUM = 1
+LOCAL_PATH = os.getcwd()
 
 
 class SelfHTTPHandler(BaseHTTPRequestHandler):
@@ -55,7 +60,12 @@ def server_run(server_class=HTTPServer, handler_class=SelfHTTPHandler, port=80):
     httpd.serve_forever()
 
 
-if __name__ == '__main__':
-    # initialize threadPool
+def main():
     train_tasks = TaskManager(THREAD_NUM)
     server_run(port=PORT)
+
+
+if __name__ == '__main__':
+    with daemon.DaemonContext(pidfile=lockfile.FileLock(os.path.join(LOCAL_PATH, 'TFModel_server.pid')),
+                              stdout=open(os.path.join(LOCAL_PATH, 'log', 'server_log'), 'w+')):
+        main()
