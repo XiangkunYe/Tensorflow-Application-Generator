@@ -89,6 +89,11 @@ class TaskThread(Thread):
             self.logger.info("start training...")
             model_file_path = train(self.task_id, method, user_dir)
             self.logger.info("training finished")
-            TaskManager().task_dict[self.task_id]['state'] = 'done'
-            TaskManager().task_dict[self.task_id]['modelPath'] = model_file_path
+            if model_file_path is None:
+                TaskManager().task_dict[self.task_id]['state'] = 'done with error'
+                TaskManager().task_dict[self.task_id]['modelPath'] = ""
+            else:
+                TaskManager().task_dict[self.task_id]['state'] = 'done'
+                TaskManager().task_dict[self.task_id]['modelPath'] = model_file_path
+            TaskManager().task_dict[self.task_id]['progress'] = 100
             self.task_queue.task_done()

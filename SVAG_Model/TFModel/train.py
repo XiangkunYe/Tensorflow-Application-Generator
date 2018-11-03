@@ -5,6 +5,7 @@ import numpy as np
 import tensorflow as tf
 import os
 import logging
+import shutil
 from tensorflow.python.platform import gfile
 from data import ImageDataPipeline, BottleneckDataPipeline
 from models import InceptionModelGenerator, UnetModelGenerator
@@ -13,7 +14,7 @@ from thread import TaskManager
 
 IMAGE_SIZE = [256, 256]
 CHANNELS = 3
-SEGMENTATION_IMAGE_BATCH_SIZE = 100
+SEGMENTATION_IMAGE_BATCH_SIZE = 5
 CLASSIFY_IMAGE_BATCH_SIZE = 10
 BOTTLENECK_BATCH_SIZE = 500
 VALIDATION_PERCENTAGE = 0.3
@@ -53,6 +54,8 @@ def get_and_cache_bottlenecks(task_id, file_dir, model_gen, image_dp):
     bottleneck_dir = os.path.join(file_dir, BOTTLENECK_FOLDER)
 
     image_ds = image_dp.get_input_files(VALIDATION_PERCENTAGE)
+    if image_ds is None:
+        return False
     images = image_ds["training"]["filenames"] + image_ds["validation"]["filenames"]
     labels = image_ds["training"]["labels"] + image_ds["validation"]["labels"]
 
@@ -85,6 +88,7 @@ def get_and_cache_bottlenecks(task_id, file_dir, model_gen, image_dp):
         if i % 100 == 0:
             TRAIN_LOGGER.info("[task({})]already output {} images' bottlenecks".format(task_id, i))
     TRAIN_LOGGER.info("[task({})]bottlenecks generation is done".format(task_id))
+    return True
 
 
 def train_one_layer_model(task_id, file_dir, model_gen, bottleneck_dp):
@@ -128,6 +132,8 @@ def train_segmentation_model(task_id, file_dir, model_gen, datapipeline):
     TRAIN_LOGGER.info("[task({})]start training".format(task_id))
     saved_models_path = os.path.join(file_dir, TRAINED_MODEL_FOLDER, SAVE_SEGMENTATION_WEIGHTS_FILE)
     image_ds = datapipeline.get_input_dataset(VALIDATION_PERCENTAGE, SEGMENTATION_IMAGE_BATCH_SIZE)
+    if image_ds is None:
+        return False
 
     train_model = model_gen.get_model()
     self_adam = model_gen.get_optimizer(learning_rate=SEGMENTATION_LEARNING_RATE)
@@ -153,12 +159,30 @@ def train_classification(task_id, file_dir):
     :param file_dir: where images are saved
     :return:
     """
+    # check the file_dir
+    if not os.path.exists(file_dir):
+        TRAIN_LOGGER.info("{} not exists. training task stop".format(file_dir))
+        return None
+
     saved_models_path = os.path.join(file_dir, TRAINED_MODEL_FOLDER)
     images_dir = os.path.join(file_dir, IMAGE_FOLDER)
     label_file = os.path.join(file_dir, LABEL_INFO_FILE)
     bottleneck = os.path.join(file_dir, BOTTLENECK_FOLDER)
     weights_file = os.path.join(saved_models_path, SAVE_ONE_LAYER_FILE)
     model_file = os.path.join(saved_models_path, SAVE_FINAL_MODEL_FILE)
+
+    # check or create file dir needed
+    if not os.path.exists(images_dir):
+        TRAIN_LOGGER.info("{} not exists. training task stop".format(images_dir))
+        return None
+    if not os.path.exists(label_file):
+        TRAIN_LOGGER.info("{} not exists. training task stop".format(label_file))
+        return None
+    if os.path.exists(bottleneck):
+        shutil.rmtree(bottleneck)
+    os.mkdir(bottleneck)
+    if not os.path.exists(saved_models_path):
+        os.mkdir(saved_models_path)
 
     image_dp = ImageDataPipeline(images_dir, label_file, image_size=IMAGE_SIZE)
     generator = InceptionModelGenerator(INCEPTION_V3_FILE,
@@ -168,7 +192,10 @@ def train_classification(task_id, file_dir):
 
     # Step 1. compute and save bottlenecks by Inception V3 Model
     update_progress(task_id, 0)
-    get_and_cache_bottlenecks(task_id, file_dir, generator, image_dp)
+    succeed = get_and_cache_bottlenecks(task_id, file_dir, generator, image_dp)
+    if not succeed:
+        TRAIN_LOGGER.info("[task({})]get and cache bottlenecks failed".format(task_id))
+        return None
     # Step 2. train the last layer of our model
     update_progress(task_id, 70)
     train_one_layer_model(task_id, file_dir, generator, bottleneck_dp)
@@ -179,6 +206,8 @@ def train_classification(task_id, file_dir):
     model.save(model_file)
     update_progress(task_id, 100)
     TRAIN_LOGGER.info("[task({})]model saved".format(task_id))
+    # Step 4. Clear all the bottlenecks
+    shutil.rmtree(bottleneck)
     return model_file
 
 
@@ -194,12 +223,24 @@ def train_segmentation(task_id, file_dir):
     label_dir = os.path.join(file_dir, LABEL_FOLDER)
     model_file = os.path.join(saved_models_path, SAVE_SEGMENTATION_MODEL_FILE)
 
+    if not os.path.exists(saved_models_path):
+        os.mkdir(saved_models_path)
+    if not os.path.exists(images_dir):
+        TRAIN_LOGGER.info("{} not exists. training task stop".format(images_dir))
+        return None
+    if not os.path.exists(label_dir):
+        TRAIN_LOGGER.info("{} not exists. training task stop".format(label_dir))
+        return None
+
     image_dp = ImageDataPipeline(images_dir, label_dir, image_size=IMAGE_SIZE, method="Segmentation")
     generator = UnetModelGenerator((IMAGE_SIZE[0], IMAGE_SIZE[1], CHANNELS))
 
     # start training...
     update_progress(task_id, 0)
-    train_segmentation_model(task_id, file_dir, generator, image_dp)
+    succeed = train_segmentation_model(task_id, file_dir, generator, image_dp)
+    if not succeed:
+        TRAIN_LOGGER.info("[task({})]train segmentation model failed".format(task_id))
+        return None
 
     model = generator.get_model()
     model.save(model_file)

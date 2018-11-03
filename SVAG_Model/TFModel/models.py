@@ -1,3 +1,9 @@
+"""
+the models.py include all the tensorflow graph for image classification.
+currently,
+we use Inception V3 Model to train the image classification task and
+Unet Model to train the image segmentation task
+"""
 import tensorflow as tf
 import tensorflow as tf
 import tensorflow.contrib as tfcontrib

@@ -24,7 +24,7 @@ if platform.system() != "Windows":
     import lockfile
 
 PORT = 46176
-THREAD_NUM = 1
+THREAD_NUM = 2
 LOCAL_PATH = os.getcwd()
 SERVER_LOG = 'server.log'
 TASK_MANAGER_LOG = 'taskmanager.log'
@@ -129,7 +129,7 @@ def initialize_logger():
     task_logger.setLevel(logging.DEBUG)
     th = logging.FileHandler(os.path.join(LOCAL_PATH, LOG_DIR, TASK_MANAGER_LOG))
     th.setLevel(logging.INFO)
-    task_formatter = logging.Formatter('%(asctime)s - %(threadNmae)s - %(message)s')
+    task_formatter = logging.Formatter('%(asctime)s - %(threadName)s - %(message)s')
     th.setFormatter(task_formatter)
     task_logger.addHandler(th)
 
@@ -184,6 +184,9 @@ def start():
 
 
 def stop():
+    if platform.system() == "Windows":
+        print("[server]daemon is not supported on Windows")
+        return
     if not os.path.exists(os.path.join(LOCAL_PATH, PID_FILE)):
         print("[server]WARNING!no pid file found.if you already start the server, "
               "please use'ps -ax|grep python server.py start'to find the server process's pid and kill it!")

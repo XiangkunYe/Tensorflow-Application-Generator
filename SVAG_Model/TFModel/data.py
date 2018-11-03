@@ -166,6 +166,7 @@ class ImageDataPipeline(object):
         self.image_channels = image_channels
         self.is_seg = (method == "Segmentation")
         self.max_images = 10000000
+        self.min_images = 20
         self.labels_dir = labels_dir
         self.labels_classes = 0
         # records label's name with the number from 0 to labels_classes-1
@@ -344,11 +345,12 @@ class ImageDataPipeline(object):
             if not file_list:
                 print('No files found')
                 continue
-            if len(file_list) < 20:
+            if len(file_list) < self.min_images:
                 print('WARNING: Folder has less than 20 images, which may cause issues.')
+                return None
             elif len(file_list) > self.max_images:
-                print('WARNING: Folder {} has more than {} images. Some images will '
-                      'never be selected.'.format(dir_name, self.max_images))
+                print('WARNING: Folder {} has more than {} images.'.format(dir_name, self.max_images))
+                return None
 
             label_name = re.sub(r'[^a-z0-9]+', ' ', dir_name.lower())
             training_images, validation_images = train_test_split(file_list, test_size=vali_percentage)
@@ -376,11 +378,13 @@ class ImageDataPipeline(object):
         if not file_list:
             print('No files found')
             return None
-        if len(file_list) < 20:
+        if len(file_list) < self.min_images:
             print('WARNING: Folder has less than 20 images, which may cause issues.')
+            return None
         elif len(file_list) > self.max_images:
-            print('WARNING: Folder {} has more than {} images. Some images will '
-                  'never be selected.'.format(images_dir, self.max_images))
+            print('WARNING: Folder {} has more than {} images.'.format(images_dir, self.max_images))
+            return None
+
         training_images, validation_images = train_test_split(file_list, test_size=vali_precentage)
         result['segmentation'] = {
             'dir': images_dir,
@@ -396,6 +400,9 @@ class ImageDataPipeline(object):
                   }
         if self.is_seg:
             images_filenames = self.extract_images_filenames_for_segmentation(self.images_dir, vali_percentage)
+            if images_filenames is None:
+                print("no images found")
+                return None
             for k in result.keys():
                 result[k]["filenames"] = images_filenames["segmentation"][k]
                 for filename in result[k]["filenames"]:
@@ -404,14 +411,17 @@ class ImageDataPipeline(object):
                     result[k]["labels"].append(os.path.join(self.labels_dir, label_filename))
         else:
             images_filenames = self.extract_filenames_for_classify(vali_percentage)
+            if images_filenames is None:
+                print("no images found")
+                return None
             class_count = len(images_filenames.keys())
             if class_count == 0:
                 print('No valid folders of images found at ' + self.images_dir)
-                return -1
+                return None
             if class_count == 1:
                 print('Only one valid folder of images found at ' + self.images_dir +
                       ' - multiple classes are needed for classification.')
-                return -1
+                return None
 
             for cls in images_filenames.keys():
                 for k in result.keys():
@@ -426,6 +436,8 @@ class ImageDataPipeline(object):
     def get_input_dataset(self, vali_percentage, batch_size):
         result = {}
         image_label_result = self.get_input_files(vali_percentage)
+        if image_label_result is None:
+            return None
 
         if self.is_seg:
             train_cfg = {
