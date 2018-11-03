@@ -50,8 +50,8 @@ class taskListView(generic.ListView):
 def upload_file(request):
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
-        if form.is_valid():#表单数据如果合法
-            handle_uploaded_file(request.FILES['file'])#处理上传来的文件
+        if form.is_valid():
+            handle_uploaded_file(request.FILES['file'])
             #return HttpResponse('Successful')
             return render(request, 'returnhome.html')
     else:
@@ -60,9 +60,9 @@ def upload_file(request):
 
 # save
 def handle_uploaded_file(f):
-    today = str(datetime.date.today())#获得今天日期
-    file_name = today + '_' + f.name#获得上传来的文件名称,加入下划线分开日期和名称
-    file_path = os.path.join(os.path.dirname(__file__),file_name)#拼装目录名称+文件名称
+    today = str(datetime.date.today())
+    file_name = today + '_' + f.name
+    file_path = os.path.join(os.path.dirname(__file__),file_name)
     with open(file_path, 'wb+') as destination:
         for chunk in f.chunks():
             destination.write(chunk)
