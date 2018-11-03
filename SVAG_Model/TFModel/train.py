@@ -1,3 +1,6 @@
+"""
+The train.py implement how to train a model for image classification or segmentation purposes.
+"""
 import numpy as np
 import tensorflow as tf
 import os
@@ -38,6 +41,15 @@ def update_progress(task_id, progress):
 
 
 def get_and_cache_bottlenecks(task_id, file_dir, model_gen, image_dp):
+    """
+    generate bottleneck for every images and save them
+    :param task_id: task id
+    :param file_dir: where the images are saved
+    :param model_gen: model generater, get the inception v3 model
+    :param image_dp: image data pipeline
+    :return:
+    """
+    TRAIN_LOGGER.info("[task({})]start generating bottlenecks".format(task_id))
     bottleneck_dir = os.path.join(file_dir, BOTTLENECK_FOLDER)
 
     image_ds = image_dp.get_input_files(VALIDATION_PERCENTAGE)
@@ -71,10 +83,20 @@ def get_and_cache_bottlenecks(task_id, file_dir, model_gen, image_dp):
             bottleneck_file.write(bottleneck_string)
         update_progress(task_id, ((i+0.) / len(images)) * 70.)
         if i % 100 == 0:
-            TRAIN_LOGGER.info("already output {} images' bottlenecks".format(i))
+            TRAIN_LOGGER.info("[task({})]already output {} images' bottlenecks".format(task_id, i))
+    TRAIN_LOGGER.info("[task({})]bottlenecks generation is done".format(task_id))
 
 
 def train_one_layer_model(task_id, file_dir, model_gen, bottleneck_dp):
+    """
+    train the final layer for image classification
+    :param task_id: task id
+    :param file_dir: where images are saved
+    :param model_gen: model generator, get the final layer model
+    :param bottleneck_dp: bottleneck data pipeline
+    :return:
+    """
+    TRAIN_LOGGER.info("[task({})]start training the final layer model".format(task_id))
     model_save_path = os.path.join(file_dir, TRAINED_MODEL_FOLDER, SAVE_ONE_LAYER_FILE)
 
     bottleneck_ds = bottleneck_dp.get_input_bottleneck_dataset(VALIDATION_PERCENTAGE, BOTTLENECK_BATCH_SIZE)
@@ -91,9 +113,19 @@ def train_one_layer_model(task_id, file_dir, model_gen, bottleneck_dp):
                         validation_steps=int(np.ceil(bottleneck_dp.validation_count / BOTTLENECK_BATCH_SIZE)),
                         callbacks=[save_callback])
     update_progress(task_id, 90)
+    TRAIN_LOGGER.info("[task({})]finish training".format(task_id))
 
 
 def train_segmentation_model(task_id, file_dir, model_gen, datapipeline):
+    """
+    train the image segmentation model based on model_gen
+    :param task_id: task id
+    :param file_dir: where images are saved
+    :param model_gen: model generator
+    :param datapipeline: image datapipeline
+    :return:
+    """
+    TRAIN_LOGGER.info("[task({})]start training".format(task_id))
     saved_models_path = os.path.join(file_dir, TRAINED_MODEL_FOLDER, SAVE_SEGMENTATION_WEIGHTS_FILE)
     image_ds = datapipeline.get_input_dataset(VALIDATION_PERCENTAGE, SEGMENTATION_IMAGE_BATCH_SIZE)
 
@@ -111,9 +143,16 @@ def train_segmentation_model(task_id, file_dir, model_gen, datapipeline):
                     validation_steps=int(np.ceil(datapipeline.validation_count / SEGMENTATION_IMAGE_BATCH_SIZE)),
                     callbacks=[save_callback])
     update_progress(task_id, 90)
+    TRAIN_LOGGER.info("[task({})]finish training".format(task_id))
 
 
 def train_classification(task_id, file_dir):
+    """
+    train model for image classification
+    :param task_id: task id
+    :param file_dir: where images are saved
+    :return:
+    """
     saved_models_path = os.path.join(file_dir, TRAINED_MODEL_FOLDER)
     images_dir = os.path.join(file_dir, IMAGE_FOLDER)
     label_file = os.path.join(file_dir, LABEL_INFO_FILE)
@@ -129,23 +168,27 @@ def train_classification(task_id, file_dir):
 
     # Step 1. compute and save bottlenecks by Inception V3 Model
     update_progress(task_id, 0)
-    TRAIN_LOGGER.info("start get & cache all bottlenecks")
     get_and_cache_bottlenecks(task_id, file_dir, generator, image_dp)
     # Step 2. train the last layer of our model
     update_progress(task_id, 70)
-    TRAIN_LOGGER.info("start train the final layer")
     train_one_layer_model(task_id, file_dir, generator, bottleneck_dp)
     # Step 3. load the weights generated in Step 2. to our final model
-    TRAIN_LOGGER.info("training is over")
     model = generator.get_eval_model()
     model.load_weights(weights_file, by_name=True)
     # TO DO: save model as android format...
     model.save(model_file)
     update_progress(task_id, 100)
+    TRAIN_LOGGER.info("[task({})]model saved".format(task_id))
     return model_file
 
 
 def train_segmentation(task_id, file_dir):
+    """
+    train a model for image segmentation
+    :param task_id: task id
+    :param file_dir: where images are saved
+    :return:
+    """
     saved_models_path = os.path.join(file_dir, TRAINED_MODEL_FOLDER)
     images_dir = os.path.join(file_dir, IMAGE_FOLDER)
     label_dir = os.path.join(file_dir, LABEL_FOLDER)
@@ -161,6 +204,7 @@ def train_segmentation(task_id, file_dir):
     model = generator.get_model()
     model.save(model_file)
     update_progress(task_id, 100)
+    TRAIN_LOGGER.info("[task({})]model saved".format(task_id))
     return model_file
 
 

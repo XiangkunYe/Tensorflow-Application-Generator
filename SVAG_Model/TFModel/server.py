@@ -1,3 +1,10 @@
+"""
+The main file of server.
+use;
+python server.py start
+python server.py stop
+python server.py restart
+"""
 import uuid
 import json
 import platform
@@ -24,7 +31,7 @@ TASK_MANAGER_LOG = 'taskmanager.log'
 LOG_DIR = 'log'
 PID_FILE = 'TFModel_server.pid'
 SERVER_OUTPUT_LOG = 'server_outputs.log'
-SERVER_LOGGER = logging.getLogger('main_server')
+SERVER_ERR_LOG = 'server_err.log'
 
 # Process HTTP Requests
 class SelfHTTPHandler(BaseHTTPRequestHandler):
@@ -167,9 +174,9 @@ def start():
     else:
         try:
             with daemon.DaemonContext(pidfile=daemon.pidfile.PIDLockFile(os.path.join(LOCAL_PATH, PID_FILE)),
-                                      files_preserve= [server_log_file.stream,
-                                                       task_log_file.stream]
-                                      ):
+                                      files_preserve=[server_log_file.stream, task_log_file.stream],
+                                      stdout=open(os.path.join(LOCAL_PATH, SERVER_OUTPUT_LOG), 'a+'),
+                                      stderr=open(os.path.join(LOCAL_PATH, SERVER_ERR_LOG), 'a+')):
                 server_run(port=PORT)
         except Exception as e:
             print("[server start]error starting server: %s" % e, file=sys.stdout)
@@ -178,7 +185,8 @@ def start():
 
 def stop():
     if not os.path.exists(os.path.join(LOCAL_PATH, PID_FILE)):
-        print("[server]WARNING!no pid file found.if you already start the server, please use'ps -ax|grep python server.py start'to find the server process's pid and kill it!")
+        print("[server]WARNING!no pid file found.if you already start the server, "
+              "please use'ps -ax|grep python server.py start'to find the server process's pid and kill it!")
     else:
         try:
             with open(os.path.join(LOCAL_PATH, PID_FILE), 'r') as file:
@@ -188,18 +196,22 @@ def stop():
                 subprocess.check_call(cmd)
                 print("stop server....")
             os.remove(os.path.join(LOCAL_PATH, PID_FILE))
+            print("server stopped")
         except OSError as e:
             print("[server]error killing process: %s" % e)
-            print("[server]ERROR!no pid file found.please use'ps -ax|grep python server.py start'to find the server process's pid and kill it!")
+            print("[server]ERROR!no pid file found."
+                  "please use'ps -ax|grep python server.py start'to find the server process's pid and kill it!")
         except subprocess.CalledProcessError as e:
             print("[server]error killing process: %s" % e)
-            print("[server]ERROR!no pid file found.please use'ps -ax|grep python server.py start'to find the server process's pid and kill it!")
+            print("[server]ERROR!no pid file found."
+                  "please use'ps -ax|grep python server.py start'to find the server process's pid and kill it!")
 
 
 if __name__ == '__main__':
     counts = len(sys.argv)
     if counts < 2:
-        print("[server]invalid parameters, you should use commands below:\npython server.py start\npython server.py stop\npython server.py restart")
+        print("[server]invalid parameters, you should use commands below:\n"
+              "python server.py start\npython server.py stop\npython server.py restart")
     else:
         operation = sys.argv[1]
         if operation == 'start':
@@ -210,4 +222,5 @@ if __name__ == '__main__':
             stop()
             start()
         else:
-            print("[server]invalid parameters, you should use commands below:\npython server.py start\npython server.py stop\npython server.py restart")
+            print("[server]invalid parameters, you should use commands below:\n"
+                  "python server.py start\npython server.py stop\npython server.py restart")

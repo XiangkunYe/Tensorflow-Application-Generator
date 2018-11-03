@@ -1,3 +1,9 @@
+"""
+The data.py provides several Data Pipeline Classes. It takes images as input and output the dataset objects
+needed. The dataset object is designed in tf.data, it helps process the images faster.
+
+The Data Pipeline Classes also implement some image augmentation function for better training results.
+"""
 import tensorflow as tf
 import os
 import functools
@@ -310,6 +316,11 @@ class ImageDataPipeline(object):
         return dataset
 
     def extract_filenames_for_classify(self, vali_percentage):
+        """
+        extract images' filenames from a dir
+        :param vali_percentage: the percentage of images for validation
+        :return: a dict containing images' filenames by labels
+        """
         if not gfile.Exists(self.images_dir):
             print("Image directory '" + self.images_dir + "' not found.")
             return None
@@ -348,6 +359,11 @@ class ImageDataPipeline(object):
         return result
 
     def extract_images_filenames_for_segmentation(self, images_dir, vali_precentage):
+        """
+        extract images' filenames from a dir
+        :param vali_percentage: the percentage of images for validation
+        :return: a dict containing images' filenames by labels
+        """
         if not gfile.Exists(images_dir):
             print("Image directory '" + images_dir + "' not found.")
             return None
