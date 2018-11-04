@@ -13,6 +13,7 @@ import os
 import logging
 import sys
 import subprocess
+import argparse
 from thread import TaskManager
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
@@ -143,7 +144,7 @@ def server_run(server_class=HTTPServer, handler_class=SelfHTTPHandler, port=80):
     httpd.serve_forever()
 
 
-def start():
+def start(debug=False):
     if os.path.exists(os.path.join(LOCAL_PATH, PID_FILE)):
         print("server already started. you need stop it first or use restart")
         return
@@ -173,10 +174,14 @@ def start():
         server_run(port=PORT)
     else:
         try:
-            with daemon.DaemonContext(pidfile=daemon.pidfile.PIDLockFile(os.path.join(LOCAL_PATH, PID_FILE)),
-                                      files_preserve=[server_log_file.stream, task_log_file.stream],
-                                      stdout=open(os.path.join(LOCAL_PATH, SERVER_OUTPUT_LOG), 'a+'),
-                                      stderr=open(os.path.join(LOCAL_PATH, SERVER_ERR_LOG), 'a+')):
+            if not debug:
+                with daemon.DaemonContext(pidfile=daemon.pidfile.PIDLockFile(os.path.join(LOCAL_PATH, PID_FILE)),
+                                          files_preserve=[server_log_file.stream, task_log_file.stream],
+                                          stdout=open(os.path.join(LOCAL_PATH, SERVER_OUTPUT_LOG), 'a+'),
+                                          stderr=open(os.path.join(LOCAL_PATH, SERVER_ERR_LOG), 'a+')):
+                    server_run(port=PORT)
+            else:
+                # start running server, listening to PORT
                 server_run(port=PORT)
         except Exception as e:
             print("[server start]error starting server: %s" % e, file=sys.stdout)
@@ -212,18 +217,19 @@ def stop():
 
 if __name__ == '__main__':
     counts = len(sys.argv)
-    if counts < 2:
+    if counts < 3:
         print("[server]invalid parameters, you should use commands below:\n"
               "python server.py start\npython server.py stop\npython server.py restart")
     else:
         operation = sys.argv[1]
+        is_debug = (sys.argv[2] == "debug")
         if operation == 'start':
-            start()
+            start(is_debug)
         elif operation == 'stop':
             stop()
         elif operation == 'restart':
             stop()
-            start()
+            start(is_debug)
         else:
             print("[server]invalid parameters, you should use commands below:\n"
                   "python server.py start\npython server.py stop\npython server.py restart")
