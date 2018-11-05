@@ -217,12 +217,14 @@ def stop():
 
 if __name__ == '__main__':
     counts = len(sys.argv)
-    if counts < 3:
+    if counts < 2:
         print("[server]invalid parameters, you should use commands below:\n"
               "python server.py start\npython server.py stop\npython server.py restart")
     else:
         operation = sys.argv[1]
-        is_debug = (sys.argv[2] == "debug")
+        is_debug = False
+        if counts > 2:
+            is_debug = (sys.argv[2] == "debug")
         if operation == 'start':
             start(is_debug)
         elif operation == 'stop':
