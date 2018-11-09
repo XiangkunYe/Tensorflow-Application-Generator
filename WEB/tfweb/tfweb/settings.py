@@ -79,9 +79,11 @@ WSGI_APPLICATION = 'tfweb.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'tfapp',
-        'USER': 'root',
-        'PASSWORD':'12345678'
+        'NAME': 'svag_db',
+        'USER': 'svag',
+        'PASSWORD':'svagRoot',
+        'HOST': '54.214.153.147',
+        'PORT': '3306',
     }
 }
 
