@@ -1,7 +1,7 @@
-
+import json
 from django.db import connection
 
-
+from django.http import HttpResponse
 from .models import User, Project, Task, Model
 from django.contrib.auth.decorators import login_required
 
@@ -87,3 +87,43 @@ def signup(request):
     else:
         form = UserCreationForm()
     return render(request, 'signup.html', {'form': form})
+
+
+def get_task_info(request):
+    if request.method == 'GET':
+        project_id = request.GET.get('projectId', default='')
+        if project_id == '':
+            resp = {'errcode': 100, 'detail': 'invalid project_id'}
+            return HttpResponse(json.dumps(resp), content_type="application/json")
+        try:
+            task = Task.objects.get(project_id=project_id)
+            task_info = {'id': str(task.id),
+                         'path': task.path,
+                         'progress': task.progress,
+                         'owner_id': str(task.owner_id),
+                         'project_id': str(task.project_id),
+                         'state': task.state}
+            resp = {'errcode': 200, 'detail': '', 'taskInfo': task_info}
+            return HttpResponse(json.dumps(resp), content_type="application/json")
+        except:
+            resp = {'errcode': 101, 'detail': 'get task info failed'}
+            return HttpResponse(json.dumps(resp), content_type="application/json")
+
+def update_task_info(request):
+    if request.method == 'POST':
+        #id = request.POST
+        try:
+            id = request.POST.get('taskId')
+            path = request.POST.get('modelPath')
+            progress = request.POST.get('progress')
+            state = request.POST.get('state')
+            task = Task.objects.get(id=id)
+            task.path = path
+            task.progress = progress
+            task.state = state
+            task.save()
+        except:
+            resp = {'errcode': 100, 'detail': 'fail'}
+            return HttpResponse(json.dumps(resp), content_type="application/json")
+        resp = {'errcode': 200, 'detail': 'success'}
+        return HttpResponse(json.dumps(resp), content_type="application/json")
