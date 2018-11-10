@@ -5,7 +5,8 @@ import os
 # Create your views here.
 from django.http import HttpResponse
 
-from vision.form import UploadFileForm
+from tfweb.settings import LOGIN_REDIRECT_URL
+from vision.form import DocumentForm
 from .models import User, Project, Task, Model
 
 
@@ -25,47 +26,30 @@ def index(request):
     request.session['num_visits'] = num_visits + 1
 
     # Render the HTML template index.html with the data in the context variable
-    return render(
-        request,
-        'index.html',
-        # context={'num_user': num_user, 'num_project': num_project,
-        #          'num_model': num_model, 'num_task': num_task, 'num_visits':num_visits},
-    )
+    return render(request,'index.html',)
 
-from django.views import generic
-
-
-class projectListView(generic.ListView):
-    model = Project
-    template_name = 'project_list.html'
+# class projectListView(generic.ListView):
+#     model = Project
+#     template_name = 'project_list.html'
+#
+#
+#
+# class taskListView(generic.ListView):
+#     model = Task
+#     template_name = 'task_list.html'
 
 
-
-class taskListView(generic.ListView):
-    model = Task
-    template_name = 'task_list.html'
-
-
-# update
 def upload_file(request):
     if request.method == 'POST':
-        form = UploadFileForm(request.POST, request.FILES)
+        form = DocumentForm(request.POST, request.FILES)
         if form.is_valid():
-            handle_uploaded_file(request.FILES['file'])
-            #return HttpResponse('Successful')
-            return render(request, 'returnhome.html')
+            form.save()
+            return redirect(LOGIN_REDIRECT_URL)
     else:
-        form = UploadFileForm()
-    return render(request, 'upload.html', {'form':form})
-
-# save
-def handle_uploaded_file(f):
-    today = str(datetime.date.today())
-    file_name = today + '_' + f.name
-    file_path = os.path.join(os.path.dirname(__file__),file_name)
-    with open(file_path, 'wb+') as destination:
-        for chunk in f.chunks():
-            destination.write(chunk)
+        form = DocumentForm()
+    return render(request, 'upload.html', {
+        'form': form
+    })
 
 
 def TutorialView(request):
@@ -79,3 +63,22 @@ def ContactView(request):
 
 def MainView(request):
     return render(request, 'mainpage.html')
+
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.forms import UserCreationForm
+from django.shortcuts import render, redirect
+
+def signup(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data.get('username')
+            raw_password = form.cleaned_data.get('password1')
+            user = authenticate(username=username, password=raw_password)
+            login(request, user)
+            #return redirect('home')
+            return redirect('http://127.0.0.1:8000/accounts/login/')
+    else:
+        form = UserCreationForm()
+    return render(request, 'signup.html', {'form': form})
