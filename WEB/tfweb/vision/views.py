@@ -50,10 +50,6 @@ def ContactView(request):
 
 @login_required(login_url='/accounts/login/')
 def MainView(request):
-
-    return render(request, 'mainpage.html')
-
-
     uid = request.user.id
     with connection.cursor() as cursor:
         cursor.execute("SELECT svag_db.vision_project.id, svag_db.vision_project.name, svag_db.vision_task.state "
