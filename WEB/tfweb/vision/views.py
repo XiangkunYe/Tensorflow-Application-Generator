@@ -1,4 +1,16 @@
+
+import datetime
+
+from django.shortcuts import render, render_to_response
+import os
+# Create your views here.
+from django.http import HttpResponse
+from django.db import connection
+from tfweb.settings import LOGIN_REDIRECT_URL
+from vision.form import UploadFileForm
+
 from .models import User, Project, Task, Model
+from django.contrib.auth.decorators import login_required
 
 
 def index(request):
@@ -14,6 +26,7 @@ def index(request):
 
     # Render the HTML template index.html with the data in the context variable
     return render(request,'index.html',)
+
 
 
 from django.core.files.storage import FileSystemStorage
@@ -41,8 +54,27 @@ def AboutView(request):
 def ContactView(request):
     return render(request, 'contact.html')
 
+@login_required(login_url='/accounts/login/')
 def MainView(request):
+
     return render(request, 'mainpage.html')
+
+
+    uid = request.user.id
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT svag_db.vision_project.id, svag_db.vision_project.name, svag_db.vision_task.state "
+                       "FROM svag_db.vision_project "
+                       "left join svag_db.vision_task on svag_db.vision_project.id = svag_db.vision_task.project_id "
+                       "where svag_db.vision_project.user_id = %s", [uid])
+        rows = cursor.fetchall()
+    projects = []
+    for row in rows:
+        if row[2] is None:
+            projects.append({'name': row[1], 'state': 'waiting response'})
+        else:
+            projects.append({'name': row[1], 'state': row[2]})
+    return render(request, 'mainpage.html', {'username': request.user.username,
+                                             'projects': projects})
 
 
 from django.contrib.auth import login, authenticate
@@ -59,8 +91,9 @@ def signup(request):
             raw_password = form.cleaned_data.get('password1')
             user = authenticate(username=username, password=raw_password)
             login(request, user)
-            #return redirect('home')
+
             return redirect('/accounts/login/')
+
     else:
         form = UserCreationForm()
     return render(request, 'signup.html', {'form': form})

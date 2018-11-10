@@ -1,5 +1,6 @@
 #-*- coding: utf-8 -*-
 from django import forms
+from vision.models import Document
 
 # form for uploading file
 class UploadFileForm(forms.Form):

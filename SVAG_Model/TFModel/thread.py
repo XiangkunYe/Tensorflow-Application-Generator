@@ -63,6 +63,24 @@ class TaskManager(object, metaclass=Singleton):
         self.task_queue.put(task_info['taskId'])
 
 
+# class BottleneckProducer(object):
+#     def __init__(self, thread_num=1):
+#         self.task_queue = Queue()
+#         self.thread_num = thread_num
+#         self.__init_threading_pool(self.thread_num)
+#         self.logger = logging.getLogger('task_manager')
+#
+#     def __init_threading_pool(self, thread_num):
+#         """
+#         Init and run thread_num threads
+#         :param thread_num: how many threads needed
+#         :return:
+#         """
+#         for i in range(thread_num):
+#             thread = TaskThread(self.task_queue)
+#             thread.start()
+
+
 from train import train
 
 
@@ -97,3 +115,19 @@ class TaskThread(Thread):
                 TaskManager().task_dict[self.task_id]['modelPath'] = model_file_path
             TaskManager().task_dict[self.task_id]['progress'] = 100
             self.task_queue.task_done()
+
+# class BottleneckThread(Thread):
+#     def __init__(self, task_queue):
+#         Thread.__init__(self)
+#         self.task_queue = task_queue
+#         self.daemon = True
+#         self.logger = logging.getLogger('task_manager')
+#         self.thread_name = threading.current_thread().getName()
+#
+#     def run(self):
+#         """
+#         handle task: training a model
+#         :return:
+#         """
+#         while True:
+#             bottleneck_ = self.task_queue.get()

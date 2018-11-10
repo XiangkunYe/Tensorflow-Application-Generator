@@ -3,6 +3,7 @@
     {% load static %}
         <link rel="stylesheet" type="text/css" href="{% static 'css/upload.css' %}">
 
+
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <input type="file" name="myfile">
@@ -15,3 +16,4 @@
 
   <p><a href="{% url 'main' %}">Return to home</a></p>
 {% endblock %}
+
