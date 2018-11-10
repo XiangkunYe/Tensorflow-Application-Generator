@@ -1,4 +1,5 @@
 from .models import User, Project, Task, Model
+from django.contrib.auth.decorators import login_required
 
 
 def index(request):
@@ -41,8 +42,12 @@ def AboutView(request):
 def ContactView(request):
     return render(request, 'contact.html')
 
+@login_required(login_url='/accounts/login/')
 def MainView(request):
-    return render(request, 'mainpage.html')
+    uid = request.user.id
+    projects = Project.objects.filter(user_id=uid)
+    return render(request, 'mainpage.html', {'username': request.user.username,
+                                             'projects': projects})
 
 
 from django.contrib.auth import login, authenticate
