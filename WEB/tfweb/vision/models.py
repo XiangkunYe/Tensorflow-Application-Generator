@@ -42,7 +42,9 @@ class Task(models.Model):
     id = models.CharField(primary_key=True,max_length=254)
     path = models.CharField(max_length=1000)
     progress = models.CharField(max_length=20)
+    state = models.CharField(max_length=32)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    project = models.ForeignKey('Project', on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         """

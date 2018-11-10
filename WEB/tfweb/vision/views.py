@@ -4,7 +4,7 @@ from django.shortcuts import render, render_to_response
 import os
 # Create your views here.
 from django.http import HttpResponse
-
+from django.db import connection
 from tfweb.settings import LOGIN_REDIRECT_URL
 from vision.form import DocumentForm
 from .models import User, Project, Task, Model
@@ -65,7 +65,18 @@ def ContactView(request):
 @login_required(login_url='/accounts/login/')
 def MainView(request):
     uid = request.user.id
-    projects = Project.objects.filter(user_id=uid)
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT svag_db.vision_project.id, svag_db.vision_project.name, svag_db.vision_task.state "
+                       "FROM svag_db.vision_project "
+                       "left join svag_db.vision_task on svag_db.vision_project.id = svag_db.vision_task.project_id "
+                       "where svag_db.vision_project.user_id = %s", [uid])
+        rows = cursor.fetchall()
+    projects = []
+    for row in rows:
+        if row[2] is None:
+            projects.append({'name': row[1], 'state': 'waiting response'})
+        else:
+            projects.append({'name': row[1], 'state': row[2]})
     return render(request, 'mainpage.html', {'username': request.user.username,
                                              'projects': projects})
 
