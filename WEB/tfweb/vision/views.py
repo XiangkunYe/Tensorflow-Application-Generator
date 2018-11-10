@@ -1,11 +1,3 @@
-import datetime
-
-from django.shortcuts import render, render_to_response
-import os
-# Create your views here.
-from django.http import HttpResponse
-
-from vision.form import UploadFileForm
 from .models import User, Project, Task, Model
 
 
@@ -13,59 +5,31 @@ def index(request):
     """
     View function for home page of site.
     """
-    # Generate counts of some of the main objects
-    num_user = User.objects.all().count()
-    num_project = Project.objects.all().count()
-
-    num_model = Model.objects.all().count()
-    num_task = Task.objects.count()  # The 'all()' is implied by default.
-
-    # Number of visits to this view, as counted in the session variable.
-    num_visits = request.session.get('num_visits', 0)
-    request.session['num_visits'] = num_visits + 1
+    # num_user = User.objects.all().count()
+    # num_project = Project.objects.all().count()
+    # num_model = Model.objects.all().count()
+    # num_task = Task.objects.count()
+    # num_visits = request.session.get('num_visits', 0)
+    # request.session['num_visits'] = num_visits + 1
 
     # Render the HTML template index.html with the data in the context variable
-    return render(
-        request,
-        'index.html',
-        # context={'num_user': num_user, 'num_project': num_project,
-        #          'num_model': num_model, 'num_task': num_task, 'num_visits':num_visits},
-    )
-
-from django.views import generic
+    return render(request,'index.html',)
 
 
-class projectListView(generic.ListView):
-    model = Project
-    template_name = 'project_list.html'
+from django.core.files.storage import FileSystemStorage
+import os
 
-
-
-class taskListView(generic.ListView):
-    model = Task
-    template_name = 'task_list.html'
-
-
-# update
 def upload_file(request):
-    if request.method == 'POST':
-        form = UploadFileForm(request.POST, request.FILES)
-        if form.is_valid():
-            handle_uploaded_file(request.FILES['file'])
-            #return HttpResponse('Successful')
-            return render(request, 'returnhome.html')
-    else:
-        form = UploadFileForm()
-    return render(request, 'upload.html', {'form':form})
-
-# save
-def handle_uploaded_file(f):
-    today = str(datetime.date.today())
-    file_name = today + '_' + f.name
-    file_path = os.path.join(os.path.dirname(__file__),file_name)
-    with open(file_path, 'wb+') as destination:
-        for chunk in f.chunks():
-            destination.write(chunk)
+    folder = os.path.join('media/',str(request.user.id),str(Project.id))
+    if request.method == 'POST' and request.FILES['myfile']:
+        myfile = request.FILES['myfile']
+        fs = FileSystemStorage(location=folder)
+        filename = fs.save(myfile.name, myfile)
+        uploaded_file_url = fs.url(filename)
+        return render(request, 'upload.html', {
+            'uploaded_file_url': uploaded_file_url
+        })
+    return render(request, 'upload.html')
 
 
 def TutorialView(request):
@@ -79,3 +43,24 @@ def ContactView(request):
 
 def MainView(request):
     return render(request, 'mainpage.html')
+
+
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.forms import UserCreationForm
+from django.shortcuts import render, redirect
+
+
+def signup(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data.get('username')
+            raw_password = form.cleaned_data.get('password1')
+            user = authenticate(username=username, password=raw_password)
+            login(request, user)
+            #return redirect('home')
+            return redirect('/accounts/login/')
+    else:
+        form = UserCreationForm()
+    return render(request, 'signup.html', {'form': form})

@@ -15,28 +15,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from django.views.generic import RedirectView
 from django.conf import settings
 from django.conf.urls.static import static
 from django.conf.urls import include
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-
-    #path('vision/',vision_index, name = 'vision_index'),
-
     path('vision/', include('vision.urls')),
-
-
-]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-
-
-# Use include() to add URLS from the catalog application and authentication system
-from django.urls import include
-
-#Add Django site authentication urls (for login, logout, password management)
-urlpatterns += [
     path('accounts/', include('django.contrib.auth.urls')),
-]
+
+# ]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
 
