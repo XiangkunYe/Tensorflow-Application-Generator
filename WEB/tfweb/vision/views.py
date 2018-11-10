@@ -74,9 +74,9 @@ def MainView(request):
     projects = []
     for row in rows:
         if row[2] is None:
-            projects.append({'name': row[1], 'state': 'waiting response'})
+            projects.append({'id': row[0], 'name': row[1], 'state': 'waiting response'})
         else:
-            projects.append({'name': row[1], 'state': row[2]})
+            projects.append({'id': row[0], 'name': row[1], 'state': row[2]})
     return render(request, 'mainpage.html', {'username': request.user.username,
                                              'projects': projects})
 
