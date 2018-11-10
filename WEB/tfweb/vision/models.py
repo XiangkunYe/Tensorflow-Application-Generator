@@ -17,6 +17,9 @@ class User(models.Model):
 
         return self.name
 class Project(models.Model):
+    """
+    Model representing a project
+    """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, help_text="Unique ID for a project")
     name = models.CharField(max_length=1000)
     ptype = models.CharField(max_length=50)
@@ -28,7 +31,11 @@ class Project(models.Model):
         String for representing the project.
         """
         return self.name
+
 class Model(models.Model):
+    """
+    Model representing a Ml model
+    """
     mtype = models.CharField(max_length=50)
     name = models.CharField(max_length=100)
     def __str__(self):
@@ -38,6 +45,9 @@ class Model(models.Model):
         return self.name
 
 class Task(models.Model):
+    """
+    Model representing a Ml task
+    """
     id = models.CharField(primary_key=True,max_length=254)
     path = models.CharField(max_length=1000)
     progress = models.CharField(max_length=20)
@@ -49,9 +59,5 @@ class Task(models.Model):
         return self.id
 
 
-class Document(models.Model):
-    description = models.CharField(max_length=255, blank=True)
-    document = models.FileField(upload_to='documents/')
-    uploaded_at = models.DateTimeField(auto_now_add=True)
 
 

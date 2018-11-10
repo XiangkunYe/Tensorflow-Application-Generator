@@ -3,22 +3,27 @@
 {% block content %}
     {% load static %}
         <link rel="stylesheet" type="text/css" href="{% static 'css/login.css' %}">
+
     {% if form.errors %}
         <p>Your username and password didn't match. Please try again.</p>
     {% endif %}
 
     {% if next %}
-    {% if user.is_authenticated %}
-        <p>Your account doesn't have access to this page. To proceed,
-        please login with an account that has access.</p>
-    {% else %}
-        <p>Please login to see this page.</p>
+        {% if user.is_authenticated %}
+            <p>Your account doesn't have access to this page. To proceed,
+            please login with an account that has access.</p>
+        {% else %}
+            <p>Please login to see this page.</p>
+        {% endif %}
     {% endif %}
-    {% endif %}
+
     <h1>Log In</h1>
+
     <div class="container">
     <form method="post" action="{% url 'login' %}">
+
         {% csrf_token %}
+
         <div id="container">
         <table align="center">
             <tr align="center">
@@ -27,6 +32,7 @@
             </tr>
         </table>
         </div>
+
         <div id="container">
         <table align="center">
             <tr>
