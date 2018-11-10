@@ -3,4 +3,5 @@
 ./WEB/tfweb/.idea
 .WEB/tfweb/venv
 .WEB/tfweb/vision/__pycache__
+.WEB/tfweb/media
 

@@ -1,13 +1,6 @@
 
-import datetime
-
-from django.shortcuts import render, render_to_response
-import os
-# Create your views here.
-from django.http import HttpResponse
 from django.db import connection
-from tfweb.settings import LOGIN_REDIRECT_URL
-from vision.form import UploadFileForm
+
 
 from .models import User, Project, Task, Model
 from django.contrib.auth.decorators import login_required
@@ -25,7 +18,7 @@ def index(request):
     # request.session['num_visits'] = num_visits + 1
 
     # Render the HTML template index.html with the data in the context variable
-    return render(request,'index.html',)
+    return render(request,'index.html')
 
 
 
@@ -33,6 +26,7 @@ from django.core.files.storage import FileSystemStorage
 import os
 
 def upload_file(request):
+
     folder = os.path.join('media/',str(request.user.id),str(Project.id))
     if request.method == 'POST' and request.FILES['myfile']:
         myfile = request.FILES['myfile']
