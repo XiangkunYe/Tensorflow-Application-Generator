@@ -249,8 +249,8 @@ def train_segmentation(task_id, file_dir):
     return model_file
 
 
-train_func = {'Classification': train_classification,
-              'Segmentation': train_segmentation,
+train_func = {'classification': train_classification,
+              'segmentation': train_segmentation,
               }
 
 
@@ -258,4 +258,8 @@ def train(task_id, method, file_dir):
     # support multi thread, each thread create a new session with new graph
     with tf.Session(graph=tf.Graph()) as sess:
         tf.keras.backend.set_session(sess)
-        return train_func[method](task_id, file_dir)
+        train_fc = train_func.get(method.lower(), None)
+        if train_fc is None:
+            TRAIN_LOGGER.info("[task{}]invalid method. not classification or segmentation".format(task_id))
+            return None
+        return train_fc(task_id, file_dir)
