@@ -110,7 +110,7 @@ def addProject(request):
         project.user = request.user
         project.save()
         project_id = project.id
-        project.path = './media/'+str(request.user.id)+str(project_id)
+        project.path = os.path.join('media/', str(request.user.id), str(project_id))
         project.save()
 
         return redirect('/vision/upload?project_id='+ str(project_id))
@@ -141,7 +141,7 @@ def upload_file(request):
 
     if request.method == 'POST' and request.FILES['myfile']:
         project_id = request.GET.get('project_id')
-        folder = os.path.join('media/', str(request.user.id),str(project_id))
+        folder = os.path.join('media/', str(request.user.id), str(project_id))
         myfile = request.FILES['myfile']
         fs = FileSystemStorage(location=folder)
         filename = fs.save(myfile.name, myfile)
