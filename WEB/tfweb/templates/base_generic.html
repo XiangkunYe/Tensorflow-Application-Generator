@@ -14,88 +14,31 @@
 		<div class="container">
 			<div class="navbar-header">
 				 <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-nav-demo" aria-expanded="false">
-	        <span class="sr-only">Toggle navigation</span>
-	        <span class="icon-bar"></span>
-	        <span class="icon-bar"></span>
-	        <span class="icon-bar"></span>
-	      </button>
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                 </button>
 				<a href="{% url 'index' %}" class="navbar-brand">BU Vision</a>
-			</div>
-			<div class="collapse navbar-collapse" id="bs-nav-demo">
-				<ul class="nav navbar-nav">
-                    <li><a href="{% url 'tutorial' %}">Tutorial</a></li>
-					<li><a href="{% url 'about' %}">About</a></li>
-					<li><a href="{% url 'contact' %}">Contact</a></li>
-				</ul>
-				<ul class="nav navbar-nav navbar-right">
-					<li><a href="#">Sign up  <i class="fa fa-user-plus"></i></a></li>
-                    			<li><a href="{% url 'login'%}">Log in  <i class="fa fa-user"></i></a></li>
-				</ul>
-			</div>
-		</div>
+			    </div>
+			        <div class="collapse navbar-collapse" id="bs-nav-demo">
+				        <ul class="nav navbar-nav">
+                            <li><a href="{% url 'main' %}">Gallary</a></li>
+                            <li><a href="{% url 'tutorial' %}">Tutorial</a></li>
+                            <li><a href="{% url 'about' %}">About</a></li>
+                            <li><a href="{% url 'contact' %}">Contact</a></li>
+				        </ul>
+				        <ul class="nav navbar-nav navbar-right">
+					        <li><a href="{% url 'signup'%}">Sign up  <i class="fa fa-user-plus"></i></a></li>
+                            <li><a href="{% url 'login'%}">Log in  <i class="fa fa-user"></i></a></li>
+				        </ul>
+                    </div>
+        </div>
 	</nav>
-{% block content %}{% endblock %}#}
+{% block content %}{% endblock %}
 
  <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.4.js"></script>
  <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 
-
 </body>
 </html>
-
-
-
-
-
-
-
-{#  {% load static %}#}
-{##}
-{#    <link rel="stylesheet" href="{% static 'css/basic.css' %}">#}
-{#</head>#}
-{##}
-{#<body>#}
-{#      <nav class="navbar navbar-default">#}
-{#  <div class="container">#}
-{# #}
-{#    <div class="navbar-header">#}
-{#      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#wanzy" aria-expanded="false">#}
-{#        <span class="sr-only">Toggle navigation</span>#}
-{#        <span class="icon-bar"></span>#}
-{#        <span class="icon-bar"></span>#}
-{#        <span class="icon-bar"></span>#}
-{#      </button>#}
-{#      <a class="navbar-brand" href="{% url 'index' %}">Home</a>#}
-{#    </div>#}
-{##}
-{#    #}
-{#    <div class="collapse navbar-collapse" id="wanzy">#}
-{#      <ul class="nav navbar-nav">#}
-{#        <li ><a href="{% url 'projects' %}">All Project</a></li>#}
-{#        <li ><a href="{% url 'tasks' %}">All Task</a></li>#}
-{#      </ul>#}
-{##}
-{#      <ul class="nav navbar-nav navbar-right">#}
-{##}
-{##}
-{#        {% if user.is_authenticated %}#}
-{#            <li><a href="#">User:{{ user.get_username }}</a></li>#}
-{#        <li><a href="{% url 'logout'%}">Logout</a></li>#}
-{#        {% else %}#}
-{##}
-{#            <li><a href="{% url 'login'%}">Login</a></li>#}
-{#            <li><a href="#">Sign Up</a></li>#}
-{#        {% endif %}#}
-{#      <li><a href="{% url 'index' %}">Return Home</a></li>#}
-{#      </ul>#}
-{#    </div>#}
-{#  </div>#}
-{#</nav>#}
-{##}
-{##}
-{#        <div class="col-lg-12">#}
-{#            {% block content %}{% endblock %}#}
-{#          </div>#}
-{#  </div>#}
-{#</body>#}
-{#</html>#}

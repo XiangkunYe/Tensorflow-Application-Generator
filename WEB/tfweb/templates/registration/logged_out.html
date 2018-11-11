@@ -2,17 +2,15 @@
 
 {% block content %}
     <body>
-    <div class="container">
- 	<div class="row">
- 		<div class="col-lg-12">
- 			<div class="content">
-    <p>Logged out!</p>
-
-    <a href="{% url 'login'%}">Click here to login again.</a>
-                			</div>
- 		</div>
- 	</div>
- </div>
-
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="content">
+                        <p>Logged out!</p>
+                        <a href="{% url 'login'%}">Click here to login again.</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </body>
 {% endblock %}

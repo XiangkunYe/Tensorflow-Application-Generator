@@ -1,26 +1,20 @@
 {% extends "base_generic.html" %}
-
-
-
 {% block content %}
-{% load static %}
-    <link rel="stylesheet" type="text/css" href="{% static 'css/upload.css' %}">
-<head>
+    {% load static %}
+        <link rel="stylesheet" type="text/css" href="{% static 'css/upload.css' %}">
 
 
-    <title>login_from</title>
-</head>
-<body>
-
-
- <form method="post" enctype="multipart/form-data".>
+  <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    {{ form }}
+      
+    <input type="file" name="myfile">
+    <button type="submit">Upload</button>
+  </form>
 
-     <button class="btn btn-default btn-lg" type="submit">Submit</button>
- </form>
+  {% if uploaded_file_url %}
+    <p>File uploaded at: <a href="{{ uploaded_file_url }}">{{ uploaded_file_url }}</a></p>
+  {% endif %}
 
 
-</body>
 {% endblock %}
 

@@ -25,7 +25,7 @@ SECRET_KEY = 'f7zhojw*87co56aki%h*-l(j40ai1*l=b@3=ipkd%p1c_$2&5w'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -79,9 +79,11 @@ WSGI_APPLICATION = 'tfweb.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'tfapp',
-        'USER': 'root',
-        'PASSWORD':'12345678'
+        'NAME': 'svag_db',
+        'USER': 'svag',
+        'PASSWORD':'svagRoot',
+        'HOST': '54.214.153.147',
+        'PORT': '3306',
     }
 }
 
@@ -125,3 +127,5 @@ USE_TZ = True
 STATIC_URL = '/static/'
 # Redirect to home URL after login (Default redirects to /accounts/profile/)
 LOGIN_REDIRECT_URL = '/vision/Main'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

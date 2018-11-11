@@ -91,6 +91,18 @@ def get_and_cache_bottlenecks(task_id, file_dir, model_gen, image_dp):
     return True
 
 
+# def get_and_cache_bottlenecksV2(task_id, file_dir, model_gen, image_dp):
+#     TRAIN_LOGGER.info("[task({})]start generating bottlenecks".format(task_id))
+#     bottleneck_dir = os.path.join(file_dir, BOTTLENECK_FOLDER)
+#     bottleneck_batch_size = 5
+#
+#     image_ds = image_dp.get_input_dataset(VALIDATION_PERCENTAGE, bottleneck_batch_size)
+#     if image_ds is None:
+#         return False
+
+
+
+
 def train_one_layer_model(task_id, file_dir, model_gen, bottleneck_dp):
     """
     train the final layer for image classification
@@ -249,8 +261,8 @@ def train_segmentation(task_id, file_dir):
     return model_file
 
 
-train_func = {'Classification': train_classification,
-              'Segmentation': train_segmentation,
+train_func = {'classification': train_classification,
+              'segmentation': train_segmentation,
               }
 
 
@@ -258,4 +270,8 @@ def train(task_id, method, file_dir):
     # support multi thread, each thread create a new session with new graph
     with tf.Session(graph=tf.Graph()) as sess:
         tf.keras.backend.set_session(sess)
-        return train_func[method](task_id, file_dir)
+        train_fc = train_func.get(method.lower(), None)
+        if train_fc is None:
+            TRAIN_LOGGER.info("[task{}]invalid method. not classification or segmentation".format(task_id))
+            return None
+        return train_fc(task_id, file_dir)

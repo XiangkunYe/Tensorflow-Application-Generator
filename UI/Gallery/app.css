@@ -20,12 +20,19 @@ body {
   color: white;
 } 
 
-.button {
+.download {
+    padding-left: 5%;
+    border: none;
+    display: inline-block;
+    color: #2c3e50;
+}
+
+.delete {
+    float: right;
     padding-right: 5%;
     border: none;
     display: inline-block;
     color: #2c3e50;
-    float: right;
 }
 
 .name {
