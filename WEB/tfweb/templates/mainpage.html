@@ -49,7 +49,7 @@
         <div class="thumbnail">
           <img src="https://images.unsplash.com/photo-1540175837026-c00e5be3177c?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=851d1196b3f33bbe3c667b2e9bb2629d&auto=format&fit=crop&w=2690&q=80">
           <label id= "{{ project.id }}" class="name">{{ project.name }} : {{ project.state }}</label>
-          <button class="button" type="button">Download</button>
+          <a href="/vision/download?task_id={{ project.task_id }}" class="button" type="button">Download</a>
         </div>
       </div>
       {% endfor %}

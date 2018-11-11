@@ -1,10 +1,10 @@
 import json
 from django.db import connection
-
+from django.http import StreamingHttpResponse
 from django.http import HttpResponse
 from .models import User, Project, Task, Model
 from django.contrib.auth.decorators import login_required
-
+from .train_model import train_model_request, query_task_state, download_model_iterator
 
 def index(request):
     return render(request,'index.html')
@@ -22,17 +22,17 @@ def ContactView(request):
 def MainView(request):
     uid = request.user.id
     with connection.cursor() as cursor:
-        cursor.execute("SELECT svag_db.vision_project.id, svag_db.vision_project.name, svag_db.vision_task.state "
-                       "FROM svag_db.vision_project "
-                       "left join svag_db.vision_task on svag_db.vision_project.id = svag_db.vision_task.project_id "
-                       "where svag_db.vision_project.user_id = %s", [uid])
+        cursor.execute("SELECT vision_project.id, vision_project.name, vision_task.state , vision_task.id "
+                       "FROM vision_project "
+                       "LEFT JOIN vision_task on vision_project.id = vision_task.project_id "
+                       "where vision_project.user_id = %s", [uid])
         rows = cursor.fetchall()
     projects = []
     for row in rows:
         if row[2] is None:
-            projects.append({'id': row[0], 'name': row[1], 'state': 'waiting response'})
+            projects.append({'id': row[0], 'name': row[1], 'state': 'waiting response', 'task_id': row[3]})
         else:
-            projects.append({'id': row[0], 'name': row[1], 'state': row[2]})
+            projects.append({'id': row[0], 'name': row[1], 'state': row[2], 'task_id': row[3]})
     return render(request, 'mainpage.html', {'username': request.user.username,
                                              'projects': projects})
 
@@ -84,7 +84,7 @@ def update_task_info(request):
         #id = request.POST
         try:
             id = request.POST.get('taskId')
-            path = request.POST.get('modelPath')
+            path = request.POST.get('modelPath', '')
             progress = request.POST.get('progress')
             state = request.POST.get('state')
             task = Task.objects.get(id=id)
@@ -98,7 +98,7 @@ def update_task_info(request):
         resp = {'errcode': 200, 'detail': 'success'}
         return HttpResponse(json.dumps(resp), content_type="application/json")
 
-
+@login_required(login_url='/accounts/login/')
 def addProject(request):
     if request.method == 'POST':
         project_name = request.POST["project_name"]
@@ -110,6 +110,8 @@ def addProject(request):
         project.user = request.user
         project.save()
         project_id = project.id
+        project.path = './media/'+str(request.user.id)+str(project_id)
+        project.save()
 
         return redirect('/vision/upload?project_id='+ str(project_id))
     return render(request, 'createproject.html')
@@ -118,6 +120,23 @@ def addProject(request):
 from django.core.files.storage import FileSystemStorage
 import os
 
+@login_required(login_url='/accounts/login/')
+def download_file(request):
+    task_id = request.GET.get('task_id')
+    task = Task.objects.get(id=task_id)
+    # TO DO: check auth
+    # if task.owner_id != request.user.id:
+    #
+    file_path = task.path
+    file_name = os.path.basename(file_path)
+    response = StreamingHttpResponse(download_model_iterator(file_path))
+    response['Content-Type'] = 'application/octet-stream'
+    response['Content-Disposition'] = 'attachment;filename="{0}"'.format(file_name)
+
+    return response
+
+
+@login_required(login_url='/accounts/login/')
 def upload_file(request):
 
     if request.method == 'POST' and request.FILES['myfile']:
@@ -127,6 +146,25 @@ def upload_file(request):
         fs = FileSystemStorage(location=folder)
         filename = fs.save(myfile.name, myfile)
         uploaded_file_url = fs.url(filename)
+        # TO DO: tar the uploaded file
+
+        # request training to TFModel
+        project = Project.objects.get(id=project_id)
+        request_data = {'user_id': request.user.id,
+                        'project_id': project_id,
+                        'path': project.path,
+                        'ptype': project.ptype}
+        isSuccess, task_object = train_model_request(request_data)
+
+        # save & record task
+        new_task = Task(id=task_object['taskId'],
+                        path='',
+                        progress=task_object['progress'],
+                        state=task_object['state'],
+                        owner=request.user,
+                        project=project)
+        new_task.save()
+
         return render(request, 'upload.html', {
             'uploaded_file_url': uploaded_file_url
         })

@@ -6,6 +6,7 @@ import logging
 from threading import Thread
 from queue import Queue
 from web import update_task_info
+from server import get_debug_mode
 
 
 class Singleton(type):
@@ -106,7 +107,13 @@ class TaskThread(Thread):
             method = TaskManager().task_dict[self.task_id]['trainType']
             user_dir = TaskManager().task_dict[self.task_id]['projectDir']
             self.logger.info("start training...")
-            model_file_path = train(self.task_id, method, user_dir)
+            update_task_info(self.task_id, TaskManager().task_dict[self.task_id])
+            model_file_path = ""
+            if get_debug_mode():
+                import time
+                time.sleep(30)
+            else:
+                model_file_path = train(self.task_id, method, user_dir)
             self.logger.info("training finished")
             if model_file_path is None:
                 TaskManager().task_dict[self.task_id]['state'] = 'done with error'
