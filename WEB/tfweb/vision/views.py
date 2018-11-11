@@ -112,7 +112,10 @@ def addProject(request):
         project.user = request.user
         project.save()
         project_id = project.id
-        project.path = os.path.join('media/', str(request.user.id), str(project_id))
+        root_dir = os.getcwd()
+        project_path = os.path.join(root_dir, 'media', str(request.user.id), str(project_id))
+        os.makedir(project_path)
+        project.path = project_path
         project.save()
 
         return redirect('/vision/upload?project_id='+ str(project_id))
@@ -143,7 +146,8 @@ def upload_file(request):
 
     if request.method == 'POST' and request.FILES['myfile']:
         project_id = request.GET.get('project_id')
-        folder = os.path.join('media/', str(request.user.id), str(project_id))
+        project = Project.objects.get(id=project_id)
+        folder = project.path
         myfile = request.FILES['myfile']
         fs = FileSystemStorage(location=folder)
         filename = fs.save(myfile.name, myfile)
@@ -155,6 +159,9 @@ def upload_file(request):
             for names in zip_file.namelist():
                 zip_file.extract(names, folder)
             zip_file.close()
+            extracted_dir = os.path.basename(current_path).split('.')[0]
+            project.path = os.path.join(project.path, extracted_dir)
+            project.save()
 
         # request training to TFModel
         project = Project.objects.get(id=project_id)
