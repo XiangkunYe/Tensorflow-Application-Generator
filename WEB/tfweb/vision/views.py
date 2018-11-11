@@ -1,4 +1,6 @@
 import json
+
+import rarfile as rarfile
 from django.db import connection
 from django.http import StreamingHttpResponse
 from django.http import HttpResponse
@@ -119,7 +121,7 @@ def addProject(request):
 
 from django.core.files.storage import FileSystemStorage
 import os
-
+import zipfile
 @login_required(login_url='/accounts/login/')
 def download_file(request):
     task_id = request.GET.get('task_id')
@@ -145,8 +147,14 @@ def upload_file(request):
         myfile = request.FILES['myfile']
         fs = FileSystemStorage(location=folder)
         filename = fs.save(myfile.name, myfile)
-        uploaded_file_url = fs.url(filename)
-        # TO DO: tar the uploaded file
+        current_path = os.path.join(folder,myfile.name)
+
+        # tar the uploaded file
+        if current_path.endswith('zip'):
+            zip_file = zipfile.ZipFile(current_path)
+            for names in zip_file.namelist():
+                zip_file.extract(names, folder)
+            zip_file.close()
 
         # request training to TFModel
         project = Project.objects.get(id=project_id)
@@ -165,7 +173,6 @@ def upload_file(request):
                         project=project)
         new_task.save()
 
-        return render(request, 'upload.html', {
-            'uploaded_file_url': uploaded_file_url
-        })
-    return render(request, 'upload.html')
+        return redirect('/vision/Main')
+    else:
+        return render(request, 'upload.html')

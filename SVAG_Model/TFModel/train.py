@@ -91,6 +91,18 @@ def get_and_cache_bottlenecks(task_id, file_dir, model_gen, image_dp):
     return True
 
 
+# def get_and_cache_bottlenecksV2(task_id, file_dir, model_gen, image_dp):
+#     TRAIN_LOGGER.info("[task({})]start generating bottlenecks".format(task_id))
+#     bottleneck_dir = os.path.join(file_dir, BOTTLENECK_FOLDER)
+#     bottleneck_batch_size = 5
+#
+#     image_ds = image_dp.get_input_dataset(VALIDATION_PERCENTAGE, bottleneck_batch_size)
+#     if image_ds is None:
+#         return False
+
+
+
+
 def train_one_layer_model(task_id, file_dir, model_gen, bottleneck_dp):
     """
     train the final layer for image classification
