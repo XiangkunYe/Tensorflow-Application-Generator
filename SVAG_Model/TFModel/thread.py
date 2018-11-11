@@ -6,7 +6,6 @@ import logging
 from threading import Thread
 from queue import Queue
 from web import update_task_info
-from server import get_debug_mode
 
 
 class Singleton(type):
@@ -84,6 +83,7 @@ class TaskManager(object, metaclass=Singleton):
 
 
 from train import train
+from server import get_debug_mode
 
 
 class TaskThread(Thread):
