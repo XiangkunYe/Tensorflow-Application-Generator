@@ -5,6 +5,7 @@ import threading
 import logging
 from threading import Thread
 from queue import Queue
+from web import update_task_info
 
 
 class Singleton(type):
@@ -114,6 +115,8 @@ class TaskThread(Thread):
                 TaskManager().task_dict[self.task_id]['state'] = 'done'
                 TaskManager().task_dict[self.task_id]['modelPath'] = model_file_path
             TaskManager().task_dict[self.task_id]['progress'] = 100
+            self.logger.info("updating task info to web server")
+            update_task_info(self.task_id, TaskManager().task_dict[self.task_id])
             self.task_queue.task_done()
 
 # class BottleneckThread(Thread):
