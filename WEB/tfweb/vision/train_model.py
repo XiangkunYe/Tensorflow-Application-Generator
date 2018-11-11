@@ -1,7 +1,7 @@
 import json
 import urllib.request
 
-TFModel_IP = "http://127.0.0.1"
+TFModel_IP = "http://192.168.17.117"
 TFModel_PORT = 46176
 
 def train_model_request(request_data):
@@ -43,7 +43,7 @@ def query_task_state(task_id):
     return False, None
 
 def download_model_iterator(file_name, chunk_size=512):
-    with open(file_name) as f:
+    with open(file_name, 'rb') as f:
         while True:
             c = f.read(chunk_size)
             if c:

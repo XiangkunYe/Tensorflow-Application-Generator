@@ -114,7 +114,7 @@ def addProject(request):
         project_id = project.id
         root_dir = os.getcwd()
         project_path = os.path.join(root_dir, 'media', str(request.user.id), str(project_id))
-        os.makedir(project_path)
+        os.mkdir(project_path)
         project.path = project_path
         project.save()
 
