@@ -41,3 +41,12 @@ def query_task_state(task_id):
     if 'state' in json_object.keys():
         return True, json_object
     return False, None
+
+def download_model_iterator(file_name, chunk_size=512):
+    with open(file_name) as f:
+        while True:
+            c = f.read(chunk_size)
+            if c:
+                yield c
+            else:
+                break

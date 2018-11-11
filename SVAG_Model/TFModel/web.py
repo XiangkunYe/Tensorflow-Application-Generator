@@ -11,9 +11,9 @@ def update_task_info(task_id, task_info):
     post_data['taskId'] = task_id
     post_data = urllib.parse.urlencode(post_data).encode()
     request = urllib.request.Request(url, data=post_data)
-    # try:
-    urllib.request.urlopen(request)
-    # except Exception as e:
-    #     print("failed: %s" % e)
-    #     return False
+    try:
+        urllib.request.urlopen(request)
+    except Exception as e:
+        print("failed: %s" % e)
+        return False
     return True

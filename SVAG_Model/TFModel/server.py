@@ -33,6 +33,10 @@ LOG_DIR = 'log'
 PID_FILE = 'TFModel_server.pid'
 SERVER_OUTPUT_LOG = 'server_outputs.log'
 SERVER_ERR_LOG = 'server_err.log'
+DEBUG_MODE = False
+
+def get_debug_mode():
+    return DEBUG_MODE
 
 # Process HTTP Requests
 class SelfHTTPHandler(BaseHTTPRequestHandler):
@@ -222,16 +226,15 @@ if __name__ == '__main__':
               "python server.py start\npython server.py stop\npython server.py restart")
     else:
         operation = sys.argv[1]
-        is_debug = False
         if counts > 2:
-            is_debug = (sys.argv[2] == "debug")
+            DEBUG_MODE = (sys.argv[2] == "debug")
         if operation == 'start':
-            start(is_debug)
+            start(DEBUG_MODE)
         elif operation == 'stop':
             stop()
         elif operation == 'restart':
             stop()
-            start(is_debug)
+            start(DEBUG_MODE)
         else:
             print("[server]invalid parameters, you should use commands below:\n"
                   "python server.py start\npython server.py stop\npython server.py restart")
