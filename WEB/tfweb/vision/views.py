@@ -7,37 +7,7 @@ from django.contrib.auth.decorators import login_required
 
 
 def index(request):
-    """
-    View function for home page of site.
-    """
-    # num_user = User.objects.all().count()
-    # num_project = Project.objects.all().count()
-    # num_model = Model.objects.all().count()
-    # num_task = Task.objects.count()
-    # num_visits = request.session.get('num_visits', 0)
-    # request.session['num_visits'] = num_visits + 1
-
-    # Render the HTML template index.html with the data in the context variable
     return render(request,'index.html')
-
-
-
-from django.core.files.storage import FileSystemStorage
-import os
-
-def upload_file(request):
-
-    folder = os.path.join('media/',str(request.user.id),str(Project.id))
-    if request.method == 'POST' and request.FILES['myfile']:
-        myfile = request.FILES['myfile']
-        fs = FileSystemStorage(location=folder)
-        filename = fs.save(myfile.name, myfile)
-        uploaded_file_url = fs.url(filename)
-        return render(request, 'upload.html', {
-            'uploaded_file_url': uploaded_file_url
-        })
-    return render(request, 'upload.html')
-
 
 def TutorialView(request):
     return render(request,'tutorial.html')
@@ -127,3 +97,37 @@ def update_task_info(request):
             return HttpResponse(json.dumps(resp), content_type="application/json")
         resp = {'errcode': 200, 'detail': 'success'}
         return HttpResponse(json.dumps(resp), content_type="application/json")
+
+
+def addProject(request):
+    if request.method == 'POST':
+        project_name = request.POST["project_name"]
+        project_type = request.POST["project_type"]
+        from .models import Project
+        project = Project()
+        project.name = project_name
+        project.ptype = project_type
+        project.user = request.user
+        project.save()
+        project_id = project.id
+
+        return redirect('/vision/upload?project_id='+ str(project_id))
+    return render(request, 'createproject.html')
+
+
+from django.core.files.storage import FileSystemStorage
+import os
+
+def upload_file(request):
+
+    if request.method == 'POST' and request.FILES['myfile']:
+        project_id = request.GET.get('project_id')
+        folder = os.path.join('media/', str(request.user.id),str(project_id))
+        myfile = request.FILES['myfile']
+        fs = FileSystemStorage(location=folder)
+        filename = fs.save(myfile.name, myfile)
+        uploaded_file_url = fs.url(filename)
+        return render(request, 'upload.html', {
+            'uploaded_file_url': uploaded_file_url
+        })
+    return render(request, 'upload.html')
