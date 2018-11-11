@@ -10,6 +10,7 @@ urlpatterns = [
     path('Contact/', views.ContactView, name='contact'),
     path('Main/', views.MainView, name='main'),
     path('signup/', views.signup, name='signup'),
+    path('addproject/', views.addProject,name='addProject'),
     path('taskInfo/', views.get_task_info, name='taskInfo'),
     path('taskUpdate', views.update_task_info, name='taskUpdate')
 ]
