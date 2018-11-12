@@ -58,9 +58,11 @@
 
   <div class="container">
 
-  <div class="jumbotron">
+  <div class="jumbotron" onclick="window.open('{% url 'addProject' %}')"
+>
     <h1><i class="fa fa-camera-retro"></i> Build New Model </h1>
-      <a href="{% url 'addProject' %}" class="btn btn-default btn-lg">Click here!</a>
+<!--     <a href="{% url 'addProject' %}" class="btn btn-default btn-lg">Click here!</a>-->
+   
     <p>Please upload your data, including images and labels. <br>If you didn't have labels yet, use <strong>Neurela</strong> or any tool you like to label them!</p>
   </div>
       <div class="row">
