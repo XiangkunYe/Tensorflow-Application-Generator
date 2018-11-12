@@ -60,26 +60,24 @@ def signup(request):
         form = UserCreationForm()
     return render(request, 'signup.html', {'form': form})
 
-
+@login_required(login_url='/accounts/login/')
 def get_task_info(request):
     if request.method == 'GET':
-        project_id = request.GET.get('projectId', default='')
-        if project_id == '':
-            resp = {'errcode': 100, 'detail': 'invalid project_id'}
-            return HttpResponse(json.dumps(resp), content_type="application/json")
-        try:
-            task = Task.objects.get(project_id=project_id)
-            task_info = {'id': str(task.id),
-                         'path': task.path,
-                         'progress': task.progress,
-                         'owner_id': str(task.owner_id),
-                         'project_id': str(task.project_id),
-                         'state': task.state}
-            resp = {'errcode': 200, 'detail': '', 'taskInfo': task_info}
-            return HttpResponse(json.dumps(resp), content_type="application/json")
-        except:
-            resp = {'errcode': 101, 'detail': 'get task info failed'}
-            return HttpResponse(json.dumps(resp), content_type="application/json")
+        uid = request.user.id
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT vision_project.id, vision_project.name, vision_task.state , vision_task.id "
+                           "FROM vision_project "
+                           "LEFT JOIN vision_task on vision_project.id = vision_task.project_id "
+                           "where vision_project.user_id = %s", [uid])
+            rows = cursor.fetchall()
+        projects = []
+        for row in rows:
+            if row[2] is None:
+                projects.append({'id': row[0], 'name': row[1], 'state': 'waiting response', 'task_id': row[3]})
+            else:
+                projects.append({'id': row[0], 'name': row[1], 'state': row[2], 'task_id': row[3]})
+        return HttpResponse(json.dumps(projects), content_type="application/json")
+
 
 def update_task_info(request):
     if request.method == 'POST':
