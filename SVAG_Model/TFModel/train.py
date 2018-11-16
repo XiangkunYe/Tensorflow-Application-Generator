@@ -99,6 +99,25 @@ def get_and_cache_bottlenecks(task_id, file_dir, model_gen, image_dp):
 #     image_ds = image_dp.get_input_dataset(VALIDATION_PERCENTAGE, bottleneck_batch_size)
 #     if image_ds is None:
 #         return False
+#
+#     bottleneck_model = model_gen.get_bottleneck_model()
+#
+#     label_class_dict = {}
+#     for cls in image_dp.label_name_val_dict.keys():
+#         label_class_dict[image_dp.label_name_val_dict[cls]] = cls
+#
+#     iter_num = image_dp.training_count // bottleneck_batch_size
+#     if image_dp.training_count % bottleneck_batch_size != 0:
+#         iter_num += 1
+#     data_iter = image_ds["training"].make_one_shot_iterator()
+#     next_element = data_iter.get_next()
+#     for i in range(iter_num):
+#         bottleneck_value = np.squeeze(bottleneck_model.predict(next_element))
+#         bottleneck_string = ','.join(str(x) for x in bottleneck_value)
+#         with open(bottleneck_path, 'w') as bottleneck_file:
+#             bottleneck_file.write(bottleneck_string)
+
+
 
 
 
