@@ -7,6 +7,26 @@
 
     {% load static %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/mainpage.css' %}">
+    
+    <script type="text/javascript">
+    function statereq() {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", "/vision/taskInfo/", true);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+          var res = xhr.responseText;
+          var obj = JSON.parse(res)
+          for(var i=0; i < obj.length;i++)
+          {
+            document.getElementById(obj[i].id).innerHTML = obj[i].name + " : " + obj[i].state
+          }
+          console.log(xhr.responseXML);
+        }
+      }
+      xhr.send();
+    }
+    setInterval(function(){statereq();},5000);
+    </script>
 </head>
 <body>
 <nav class="navbar navbar-inverse navbar-fixed-top">
@@ -38,9 +58,11 @@
 
   <div class="container">
 
-  <div class="jumbotron">
+  <div class="jumbotron" onclick="window.open('{% url 'addProject' %}')"
+>
     <h1><i class="fa fa-camera-retro"></i> Build New Model </h1>
-      <a href="{% url 'addProject' %}" class="btn btn-default btn-lg">Click here!</a>
+<!--     <a href="{% url 'addProject' %}" class="btn btn-default btn-lg">Click here!</a>-->
+   
     <p>Please upload your data, including images and labels. <br>If you didn't have labels yet, use <strong>Neurela</strong> or any tool you like to label them!</p>
   </div>
       <div class="row">
