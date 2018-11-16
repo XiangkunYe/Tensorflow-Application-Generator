@@ -3,9 +3,12 @@ implement TaskManager as a Singleton. So that there is only one instance of Task
 """
 import threading
 import logging
+import os
+import numpy as np
 from threading import Thread
 from queue import Queue
 from web import update_task_info
+from tensorflow.python.platform import gfile
 
 
 class Singleton(type):
@@ -65,21 +68,26 @@ class TaskManager(object, metaclass=Singleton):
 
 
 # class BottleneckProducer(object):
-#     def __init__(self, thread_num=1):
+#     def __init__(self, model):
 #         self.task_queue = Queue()
-#         self.thread_num = thread_num
-#         self.__init_threading_pool(self.thread_num)
+#         self.bottlenect_predict_queues = Queue()
+#         self.__init_threading_pool()
 #         self.logger = logging.getLogger('task_manager')
+#         self.model = model
 #
-#     def __init_threading_pool(self, thread_num):
+#     def __init_threading_pool(self):
 #         """
 #         Init and run thread_num threads
 #         :param thread_num: how many threads needed
 #         :return:
 #         """
-#         for i in range(thread_num):
-#             thread = TaskThread(self.task_queue)
-#             thread.start()
+#         # initialize the image thread
+#         image_thread = ImageThread(self.task_queue)
+#         # intialize the bottleneck_predict thread
+#         bottleneck_thread = BottleneckThread(self.bottlenect_predict_queues, self.model)
+#         # start the threads
+#         image_thread.start()
+#         bottleneck_thread.start()
 
 
 from train import train
@@ -126,18 +134,65 @@ class TaskThread(Thread):
             update_task_info(self.task_id, TaskManager().task_dict[self.task_id])
             self.task_queue.task_done()
 
-# class BottleneckThread(Thread):
-#     def __init__(self, task_queue):
+
+# class ImageThread(Thread):
+#     def __init__(self, task_queue, image_dp):
 #         Thread.__init__(self)
 #         self.task_queue = task_queue
 #         self.daemon = True
 #         self.logger = logging.getLogger('task_manager')
 #         self.thread_name = threading.current_thread().getName()
+#         self.image_dp = image_dp
 #
 #     def run(self):
 #         """
-#         handle task: training a model
+#         handle task: process image
 #         :return:
 #         """
 #         while True:
-#             bottleneck_ = self.task_queue.get()
+#             task = self.task_queue.get()
+#             ds = self.image_dp.get_input_database(0.3, 5)
+#             training_iter = ds["training"].make_one_shot_iterator()
+#             validate_iter = ds["validation"].make_one_shot_iterator()
+#             train_next_item = training_iter.get_next()
+#             valid_next_item = validate_iter.get_next()
+#             iter_num = self.image_dp.training_count // 5
+#             if self.image_dp.training_count % 5 != 0:
+#                 iter_num += 1
+#             for i in range(iter_num):
+#                 batch_of_imgs, labels = tf.keras.backend.get_session().run(train_next_item)
+#
+#
+#
+#
+#
+# class BottleneckThread(Thread):
+#     def __init__(self, task_queue, model):
+#         Thread.__init__(self)
+#         self.task_queue = task_queue
+#         self.daemon = True
+#         self.logger = logging.getLogger('task_manager')
+#         self.thread_name = threading.current_thread().getName()
+#         self.model = model
+#
+#     def run(self):
+#         """
+#         handle task: produce bottleneck
+#         :return:
+#         """
+#         while True:
+#             task = self.task_queue.get()
+#             image_data = task['image_data']
+#             bottleneck_dir = task['bottleneck_path']
+#             label = task['label']
+#             image = task['image']
+#             if not gfile.Exists(os.path.join(bottleneck_dir, label)):
+#                 os.mkdir(os.path.join(bottleneck_dir, label))
+#             bottleneck_file_name = os.path.basename(image).split('.')[0] + ".txt"
+#             bottleneck_path = os.path.join(bottleneck_dir, label, bottleneck_file_name)
+#
+#             bottleneck_value = np.squeeze(self.model.preidct(image_data))
+#             bottleneck_string = ','.join(str(x) for x in bottleneck_value)
+#             with open(bottleneck_path, 'w') as bottleneck_file:
+#                 bottleneck_file.write(bottleneck_string)
+#             self.task_queue.task_done()
