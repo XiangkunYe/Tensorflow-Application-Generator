@@ -82,7 +82,7 @@ DATABASES = {
         'NAME': 'svag_db',
         'USER': 'svag',
         'PASSWORD':'svagRoot',
-        'HOST': '54.214.153.147',
+        'HOST': '34.221.169.103',
         'PORT': '3306',
     }
 }
