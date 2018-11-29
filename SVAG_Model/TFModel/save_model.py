@@ -6,7 +6,7 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras import backend as K
 
 
-def save_model(model, output_dir, output_name, model_file):
+def save_model(output_dir, output_name, model_file):
     # clear and reset session
     K.clear_session()
     sess = tf.Session()

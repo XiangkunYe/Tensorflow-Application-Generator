@@ -10,6 +10,7 @@ from tensorflow.python.platform import gfile
 from data import ImageDataPipeline, BottleneckDataPipeline
 from models import InceptionModelGenerator, UnetModelGenerator
 from thread import TaskManager
+from save_model import save_model
 
 
 IMAGE_SIZE = [256, 256]
@@ -235,6 +236,7 @@ def train_classification(task_id, file_dir):
     model.load_weights(weights_file, by_name=True)
     # TO DO: save model as android format...
     model.save(model_file)
+    save_model(saved_models_path, 'ClassificationModel.pb', model_file)
     update_progress(task_id, 100)
     TRAIN_LOGGER.info("[task({})]model saved".format(task_id))
     # Step 4. Clear all the bottlenecks
