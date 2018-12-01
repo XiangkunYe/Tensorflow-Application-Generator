@@ -174,9 +174,6 @@ class BuildThread(Thread):
         """
         while True:
             model_file = self.task_queue.get()
-            is_success, outputs = build_android_app(model_file)
-            if not is_success:
-                print(outputs)
             self.task_queue.task_done()
 
 

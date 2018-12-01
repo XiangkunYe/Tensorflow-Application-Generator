@@ -11,6 +11,7 @@ from data import ImageDataPipeline, BottleneckDataPipeline
 from models import InceptionModelGenerator, UnetModelGenerator
 from thread import TaskManager
 from save_model import save_model
+from build_app import build_android_app
 
 
 IMAGE_SIZE = [256, 256]
@@ -296,8 +297,21 @@ def train(task_id, method, file_dir):
             TRAIN_LOGGER.info("[task{}]invalid method. not classification or segmentation".format(task_id))
             return None
         model_file = train_fc(task_id, file_dir)
+    # save as .pb file
     if model_file is not None:
         saved_models_path = os.path.join(file_dir, TRAINED_MODEL_FOLDER)
         save_model(saved_models_path, SAVE_FINAL_MODEL_PB_FILE, model_file)
-        return os.path.join(saved_models_path, SAVE_FINAL_MODEL_PB_FILE)
+
+        # build android app
+        images_dir = os.path.join(file_dir, IMAGE_FOLDER)
+        label_file = os.path.join(file_dir, LABEL_INFO_FILE)
+        image_dp = ImageDataPipeline(images_dir, label_file, image_size=IMAGE_SIZE)
+        labels = ['' for _ in range(image_dp.labels_classes)]
+        for key in image_dp.label_name_val_dict.keys():
+            labels[image_dp.label_name_val_dict[key]] = key
+        is_success, outputs = build_android_app(labels, saved_models_path, model_file)
+        if not is_success:
+            return None
+        return outputs
+
     return model_file
