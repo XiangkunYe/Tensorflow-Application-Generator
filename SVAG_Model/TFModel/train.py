@@ -32,6 +32,7 @@ TRAINED_MODEL_FOLDER = 'models'
 INCEPTION_V3_FILE = r'.\pre_train_file\inceptionV3_bottleneck.hdf5'
 SAVE_ONE_LAYER_FILE = 'one_layer_weights.hdf5'
 SAVE_FINAL_MODEL_FILE = 'Classification_model.hdf5'
+SAVE_FINAL_MODEL_PB_FILE = 'Classification_model.pb'
 SAVE_SEGMENTATION_WEIGHTS_FILE = 'Segmentation_weights.hdf5'
 SAVE_SEGMENTATION_MODEL_FILE = 'Segmentation_model.hdf5'
 
@@ -236,8 +237,7 @@ def train_classification(task_id, file_dir):
     model.load_weights(weights_file, by_name=True)
     # TO DO: save model as android format...
     model.save(model_file)
-    save_model(saved_models_path, 'ClassificationModel.pb', model_file)
-    update_progress(task_id, 100)
+    update_progress(task_id, 90)
     TRAIN_LOGGER.info("[task({})]model saved".format(task_id))
     # Step 4. Clear all the bottlenecks
     shutil.rmtree(bottleneck)
@@ -295,4 +295,9 @@ def train(task_id, method, file_dir):
         if train_fc is None:
             TRAIN_LOGGER.info("[task{}]invalid method. not classification or segmentation".format(task_id))
             return None
-        return train_fc(task_id, file_dir)
+        model_file = train_fc(task_id, file_dir)
+    if model_file is not None:
+        saved_models_path = os.path.join(file_dir, TRAINED_MODEL_FOLDER)
+        save_model(saved_models_path, SAVE_FINAL_MODEL_PB_FILE, model_file)
+        return os.path.join(saved_models_path, SAVE_FINAL_MODEL_PB_FILE)
+    return model_file

@@ -8,8 +8,8 @@ from tensorflow.keras import backend as K
 
 def save_model(output_dir, output_name, model_file):
     # clear and reset session
-    K.clear_session()
-    sess = tf.Session()
+    # K.clear_session()
+    sess = tf.Session(graph=tf.Graph())
     K.set_session(sess)
     K.set_learning_phase(0)
     # load hdf5 model file
