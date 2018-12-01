@@ -177,7 +177,7 @@ class InceptionModelGenerator(object):
         else:
             self.inception_model = models.load_model(model_file)
         # add one more class indicating no objects found
-        classes = num_classes + 1
+        classes = num_classes
         self.inputs = layers.Input(shape=(2048,))
         self.outputs = layers.Dense(classes, activation='softmax', name='final_output')(self.inputs)
         self.one_layer_model = models.Model(inputs=[self.inputs], outputs=[self.outputs])
