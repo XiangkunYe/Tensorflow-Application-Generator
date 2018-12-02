@@ -1,5 +1,6 @@
 import tensorflow as tf
 import os
+import gc
 from tensorflow.python.framework import graph_util
 from tensorflow.python.framework import graph_io
 from tensorflow.keras.models import load_model
@@ -19,3 +20,8 @@ def save_model(output_dir, output_name, model_file):
 
     constant_graph = graph_util.convert_variables_to_constants(sess, gd, ['final_output/Softmax'])
     graph_io.write_graph(constant_graph, output_dir, output_name, as_text=False)
+    sess.close()
+    K.clear_session()
+    tf.reset_default_graph()
+
+    gc.collect()

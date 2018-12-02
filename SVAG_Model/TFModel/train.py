@@ -6,6 +6,7 @@ import tensorflow as tf
 import os
 import logging
 import shutil
+import gc
 from tensorflow.python.platform import gfile
 from data import ImageDataPipeline, BottleneckDataPipeline
 from models import InceptionModelGenerator, UnetModelGenerator
@@ -297,6 +298,10 @@ def train(task_id, method, file_dir):
             TRAIN_LOGGER.info("[task{}]invalid method. not classification or segmentation".format(task_id))
             return None
         model_file = train_fc(task_id, file_dir)
+    gc.collect()
+    #from tensorflow.keras import backend as K
+    #tf.reset_default_graph()
+    #K.clear_session()
     # save as .pb file
     if model_file is not None:
         saved_models_path = os.path.join(file_dir, TRAINED_MODEL_FOLDER)
