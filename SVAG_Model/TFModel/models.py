@@ -176,10 +176,12 @@ class InceptionModelGenerator(object):
             self.inception_model = models.Model(inputs=inception.input, outputs=inception.get_layer('avg_pool').output)
         else:
             self.inception_model = models.load_model(model_file)
+        # add one more class indicating no objects found
+        classes = num_classes
         self.inputs = layers.Input(shape=(2048,))
-        self.outputs = layers.Dense(num_classes, activation='softmax', name='final_output')(self.inputs)
+        self.outputs = layers.Dense(classes, activation='softmax', name='final_output')(self.inputs)
         self.one_layer_model = models.Model(inputs=[self.inputs], outputs=[self.outputs])
-        final_output = layers.Dense(num_classes, activation='softmax', name='final_output')(self.inception_model.output)
+        final_output = layers.Dense(classes, activation='softmax', name='final_output')(self.inception_model.output)
         self.final_model = models.Model(inputs=self.inception_model.inputs, outputs=final_output)
 
     def get_bottleneck_model(self):

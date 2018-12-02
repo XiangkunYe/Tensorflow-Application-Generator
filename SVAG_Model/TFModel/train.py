@@ -6,10 +6,13 @@ import tensorflow as tf
 import os
 import logging
 import shutil
+import gc
 from tensorflow.python.platform import gfile
 from data import ImageDataPipeline, BottleneckDataPipeline
 from models import InceptionModelGenerator, UnetModelGenerator
 from thread import TaskManager
+from save_model import save_model
+from build_app import build_android_app
 
 
 IMAGE_SIZE = [256, 256]
@@ -31,6 +34,7 @@ TRAINED_MODEL_FOLDER = 'models'
 INCEPTION_V3_FILE = r'.\pre_train_file\inceptionV3_bottleneck.hdf5'
 SAVE_ONE_LAYER_FILE = 'one_layer_weights.hdf5'
 SAVE_FINAL_MODEL_FILE = 'Classification_model.hdf5'
+SAVE_FINAL_MODEL_PB_FILE = 'Classification_model.pb'
 SAVE_SEGMENTATION_WEIGHTS_FILE = 'Segmentation_weights.hdf5'
 SAVE_SEGMENTATION_MODEL_FILE = 'Segmentation_model.hdf5'
 
@@ -235,7 +239,7 @@ def train_classification(task_id, file_dir):
     model.load_weights(weights_file, by_name=True)
     # TO DO: save model as android format...
     model.save(model_file)
-    update_progress(task_id, 100)
+    update_progress(task_id, 90)
     TRAIN_LOGGER.info("[task({})]model saved".format(task_id))
     # Step 4. Clear all the bottlenecks
     shutil.rmtree(bottleneck)
@@ -293,4 +297,26 @@ def train(task_id, method, file_dir):
         if train_fc is None:
             TRAIN_LOGGER.info("[task{}]invalid method. not classification or segmentation".format(task_id))
             return None
-        return train_fc(task_id, file_dir)
+        model_file = train_fc(task_id, file_dir)
+    gc.collect()
+    #from tensorflow.keras import backend as K
+    #tf.reset_default_graph()
+    #K.clear_session()
+    # save as .pb file
+    if model_file is not None:
+        saved_models_path = os.path.join(file_dir, TRAINED_MODEL_FOLDER)
+        save_model(saved_models_path, SAVE_FINAL_MODEL_PB_FILE, model_file)
+
+        # build android app
+        images_dir = os.path.join(file_dir, IMAGE_FOLDER)
+        label_file = os.path.join(file_dir, LABEL_INFO_FILE)
+        image_dp = ImageDataPipeline(images_dir, label_file, image_size=IMAGE_SIZE)
+        labels = ['' for _ in range(image_dp.labels_classes)]
+        for key in image_dp.label_name_val_dict.keys():
+            labels[image_dp.label_name_val_dict[key]] = key
+        is_success, outputs = build_android_app(labels, saved_models_path, model_file)
+        if not is_success:
+            return None
+        return outputs
+
+    return model_file

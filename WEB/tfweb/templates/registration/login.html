@@ -31,15 +31,15 @@
         <div id="container">
         <table align="center">
             <tr>
-              <td>{{ form.password.label_tag }}</td>
+              <td><a style="color:transparent">i</a>{{ form.password.label_tag }}</td>
               <td>{{ form.password }}</td>
             </tr>
         </table>
         </div>
-        <input type="submit" value="login" />
+        <a style="color:transparent">iiii</a><input id='login' type="submit" value="login" />
         <input type="hidden" name="next" value="{{ next }}" />
     </form>
     </div>
 {# Assumes you setup the password_reset view in your URLconf #}
-<p><a href="{% url 'password_reset' %}">Lost password?</a></p>
+<p><a style="color:transparent">iiil</a><a id='reset' href="{% url 'password_reset' %}">Lost password?</a></p>
 {% endblock %}

@@ -1,9 +1,10 @@
 import urllib.parse
 import urllib.request
 
-WEB_SERVER_IP = "http://scc1.bu.edu"
+WEB_SERVER_IP = "http://0.0.0.0"
 WEB_SERVER_PORT = 2333
 WEB_SERVER_ROUTE = '/vision/taskUpdate'
+
 
 def update_task_info(task_id, task_info):
     url = WEB_SERVER_IP + ":" + str(WEB_SERVER_PORT) + WEB_SERVER_ROUTE

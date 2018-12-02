@@ -3,13 +3,38 @@
     {% load static %}
         <link rel="stylesheet" type="text/css" href="{% static 'css/upload.css' %}">
 
-
+<body>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-nav-demo" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+             </button>
+            <a href="{% url 'index' %}" class="navbar-brand">BU Vision</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-nav-demo">
+            <ul class="nav navbar-nav">
+                <li><a href="{% url 'main' %}">Gallary</a></li>
+                <li><a href="{% url 'tutorial' %}">Tutorial</a></li>
+                <li><a href="{% url 'about' %}">About</a></li>
+                <li><a href="{% url 'contact' %}">Contact</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="{% url 'logout' %}">Logout  <i class="fa fa-user"></i> {{ username }}</a></li>
+            </ul>
+        </div>
+    </div>
+    </nav>
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
       
-    <input type="file" name="myfile">
-    <button type="submit">Upload</button>
+    <input type="file" name="myfile"><br>
+    <button style='color:dimgrey' type="submit">Upload</button>
   </form>
+</body>
 
   {% if uploaded_file_url %}
     <p>File uploaded at: <a href="{{ uploaded_file_url }}">{{ uploaded_file_url }}</a></p>

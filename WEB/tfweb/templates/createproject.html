@@ -1,13 +1,39 @@
 {% extends "base_generic.html" %}
 {% block content %}
     {% load static %}
-    <link rel="stylesheet" type="text/css" href="{% static 'css/upload.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/createproject.css'%}">
 
+<body>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+		<div class="container">
+			<div class="navbar-header">
+				 <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-nav-demo" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                 </button>
+				<a href="{% url 'index' %}" class="navbar-brand">BU Vision</a>
+			</div>
+			<div class="collapse navbar-collapse" id="bs-nav-demo">
+				<ul class="nav navbar-nav">
+                    <li><a href="{% url 'main' %}">Gallary</a></li>
+                    <li><a href="{% url 'tutorial' %}">Tutorial</a></li>
+					<li><a href="{% url 'about' %}">About</a></li>
+					<li><a href="{% url 'contact' %}">Contact</a></li>
+				</ul>
+				<ul class="nav navbar-nav navbar-right">
+					<li><a href="{% url 'logout' %}">Logout  <i class="fa fa-user"></i> {{ username }}</a></li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+    
     <form method="post" name="add_database" enctype="multipart/form-data">
-    {% csrf_token %}
-    <p><span>project name:</span><input type="text" placeholder="project_name" name="project_name"></p>
-    <p><span>project type:</span><input type="text" placeholder="project_type" name="project_type"></p>
-    <button herf="{% url 'upload' %}"type="submit">Create</button>
-
+        {% csrf_token %}
+        <p><span>Project Name:</span><input type="text" placeholder="Project_Name" name="project_name"></p>
+        <p><span><a style="color:transparent">ii</a>Project Type:</span><input type="text" placeholder="Classfy/Segment" name="project_type"></p>
+        <button style='color:dimgrey' herf="{% url 'upload' %}"type="submit"><a style="color:transparent">t</a>Create<a style="color:transparent">t</a></button>
     </form>
+</body>
 {% endblock %}

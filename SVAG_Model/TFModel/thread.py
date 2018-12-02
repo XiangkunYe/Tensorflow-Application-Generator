@@ -9,6 +9,7 @@ from threading import Thread
 from queue import Queue
 from web import update_task_info
 from tensorflow.python.platform import gfile
+from build_app import build_android_app
 
 
 class Singleton(type):
@@ -65,6 +66,31 @@ class TaskManager(object, metaclass=Singleton):
         }
         self.logger.info("[task Manager]recv and add a new task: {}".format(task_info['taskId']))
         self.task_queue.put(task_info['taskId'])
+
+
+class BuildManager(object, metaclass=Singleton):
+    def __init__(self, thread_num=1):
+        self.task_queue = Queue()
+        self.thread_num = thread_num
+        self.__init_threading_pool(self.thread_num)
+
+    def __init_threading_pool(self, thread_num):
+        """
+        Init and run thread_num threads
+        :param thread_num: how many threads needed
+        :return:
+        """
+        for i in range(thread_num):
+            thread = BuildThread(self.task_queue)
+            thread.start()
+
+    def add_job(self, model_file):
+        """
+        add new task to the queue
+        :param task_info: task information
+        :return:
+        """
+        self.task_queue.put(model_file)
 
 
 # class BottleneckProducer(object):
@@ -132,6 +158,22 @@ class TaskThread(Thread):
             TaskManager().task_dict[self.task_id]['progress'] = 100
             self.logger.info("updating task info to web server")
             update_task_info(self.task_id, TaskManager().task_dict[self.task_id])
+            self.task_queue.task_done()
+
+
+class BuildThread(Thread):
+    def __init__(self, task_queue):
+        Thread.__init__(self)
+        self.task_queue = task_queue
+        self.daemon = True
+
+    def run(self):
+        """
+        handle task: Build a Android App
+        :return:
+        """
+        while True:
+            model_file = self.task_queue.get()
             self.task_queue.task_done()
 
 
