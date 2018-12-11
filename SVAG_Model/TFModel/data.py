@@ -194,6 +194,16 @@ class ImageDataPipeline(object):
                     self.label_name_val_dict[filename] = int(label)
             self.labels_classes = len(self.label_name_val_dict.keys())
 
+    def _bottleneck_process_image(self, filename, label):
+        img_string = tf.read_file(filename)
+        image = tf.image.decode_jpeg(img_string, channels=self.image_channels)
+        image = tf.image.resize_images(image, self.image_size)
+        image = tf.to_float(image) * (1 / 255.)
+        image_data = tf.keras.backend.get_session().run(image)
+        image_data = tf.reshape(image_data, (1, self.image_size[0], self.image_szie[1], self.image_channels))
+
+        return image_data, label
+
     def _process_pathnames(self, filename, label):
         """
         process image filename and label.
@@ -316,6 +326,21 @@ class ImageDataPipeline(object):
 
         return dataset
 
+    def get_bottleneck_baseline_dataset(self, filenames, labels, threads=5, batch_size=100):
+        """
+        get the basic bottlenecks dataset
+        :param filenames: image filenames
+        :param labels: a list containing all the label val
+        :param threads: taking advantage of multithreading
+        :param batch_size: the batch size
+        :return: dataset
+        """
+        dataset = tf.data.Dataset.from_tensor_slices((filenames, labels))
+        dataset = dataset.map(self._bottleneck_process_image, num_parallel_calls=threads)
+        dataset = dataset.repeat().batch(batch_size)
+
+        return dataset
+
     def extract_filenames_for_classify(self, vali_percentage):
         """
         extract images' filenames from a dir
@@ -432,6 +457,23 @@ class ImageDataPipeline(object):
         self.validation_count = len(result["validation"]["filenames"])
 
         return result
+
+    def get_bottleneck_dataset(self, vali_percentage, batch_size):
+        result = {}
+        image_label_result = self.get_input_files(vali_percentage)
+        if image_label_result is None:
+            return None
+
+        if self.is_seg:
+            result["training"] = self.get_bottleneck_baseline_dataset(image_label_result["training"]["filenames"],
+                                                                      image_label_result["training"]["labels"],
+                                                                      batch_size=batch_size)
+            result["validation"] = self.get_bottleneck_baseline_dataset(image_label_result["validation"]["filenames"],
+                                                                        image_label_result["validation"]["labels"],
+                                                                        batch_size=batch_size)
+            return result
+        else:
+            return None
 
     def get_input_dataset(self, vali_percentage, batch_size):
         result = {}
