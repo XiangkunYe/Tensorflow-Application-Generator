@@ -8,13 +8,13 @@ import logging
 import shutil
 from tensorflow.python.platform import gfile
 from data import ImageDataPipeline, BottleneckDataPipeline
-from models import InceptionModelGenerator, UnetModelGenerator
+from models import InceptionModelGenerator, UnetModelGenerator, MobileNetModelGenerator
 from thread import TaskManager
 from save_model import save_model
 from build_app import build_android_app
 
 
-IMAGE_SIZE = [256, 256]
+IMAGE_SIZE = [224, 224]
 CHANNELS = 3
 SEGMENTATION_IMAGE_BATCH_SIZE = 5
 CLASSIFY_IMAGE_BATCH_SIZE = 10
@@ -30,7 +30,8 @@ LABEL_FOLDER = 'labels'
 LABEL_INFO_FILE = 'labels_info.txt'
 BOTTLENECK_FOLDER = 'bottlenecks'
 TRAINED_MODEL_FOLDER = 'models'
-INCEPTION_V3_FILE = r'.\pre_train_file\inceptionV3_bottleneck.hdf5'
+INCEPTION_V3_FILE = r'.\pre_train_file\inceptionV3.hdf5'
+MOBILENET_V1_FILE = r'.\pre_train_file\mobileNetV1.hdf5'
 SAVE_ONE_LAYER_FILE = 'one_layer_weights.hdf5'
 SAVE_FINAL_MODEL_FILE = 'Classification_model.hdf5'
 SAVE_FINAL_MODEL_PB_FILE = 'Classification_model.pb'
@@ -95,13 +96,22 @@ def get_and_cache_bottlenecks(task_id, file_dir, model_gen, image_dp):
 
 
 # def get_and_cache_bottlenecksV2(task_id, file_dir, model_gen, image_dp):
+#     """
+#         generate bottleneck for every images and save them
+#         :param task_id: task id
+#         :param file_dir: where the images are saved
+#         :param model_gen: model generater, get the inception v3 model
+#         :param image_dp: image data pipeline
+#         :return:
+#         """
 #     TRAIN_LOGGER.info("[task({})]start generating bottlenecks".format(task_id))
 #     bottleneck_dir = os.path.join(file_dir, BOTTLENECK_FOLDER)
-#     bottleneck_batch_size = 5
 #
-#     image_ds = image_dp.get_input_dataset(VALIDATION_PERCENTAGE, bottleneck_batch_size)
+#     image_ds = image_dp.get_input_files(VALIDATION_PERCENTAGE)
 #     if image_ds is None:
 #         return False
+#     images = image_ds["training"]["filenames"] + image_ds["validation"]["filenames"]
+#     labels = image_ds["training"]["labels"] + image_ds["validation"]["labels"]
 #
 #     bottleneck_model = model_gen.get_bottleneck_model()
 #
@@ -109,19 +119,9 @@ def get_and_cache_bottlenecks(task_id, file_dir, model_gen, image_dp):
 #     for cls in image_dp.label_name_val_dict.keys():
 #         label_class_dict[image_dp.label_name_val_dict[cls]] = cls
 #
-#     iter_num = image_dp.training_count // bottleneck_batch_size
-#     if image_dp.training_count % bottleneck_batch_size != 0:
-#         iter_num += 1
-#     data_iter = image_ds["training"].make_one_shot_iterator()
-#     next_element = data_iter.get_next()
-#     for i in range(iter_num):
-#         bottleneck_value = np.squeeze(bottleneck_model.predict(next_element))
-#         bottleneck_string = ','.join(str(x) for x in bottleneck_value)
-#         with open(bottleneck_path, 'w') as bottleneck_file:
-#             bottleneck_file.write(bottleneck_string)
-
-
-
+#     # create dataset
+#     dataset = tf.data.Dataset.from_tensor_slices((images, labels))
+#     dataset = dataset.map()
 
 
 
@@ -224,7 +224,7 @@ def train_classification(task_id, file_dir):
                                         (IMAGE_SIZE[0], IMAGE_SIZE[1], CHANNELS))
     bottleneck_dp = BottleneckDataPipeline(bottleneck, label_file)
 
-    # Step 1. compute and save bottlenecks by Inception V3 Model
+    # Step 1. compute and save bottlenecks
     update_progress(task_id, 0)
     succeed = get_and_cache_bottlenecks(task_id, file_dir, generator, image_dp)
     if not succeed:
