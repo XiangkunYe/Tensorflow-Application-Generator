@@ -5,14 +5,13 @@ we use Inception V3 Model to train the image classification task and
 Unet Model to train the image segmentation task
 """
 import tensorflow as tf
-import tensorflow as tf
 import tensorflow.contrib as tfcontrib
 from tensorflow.python import keras
 from tensorflow.python.platform import gfile
 from tensorflow.python.keras import layers
 from tensorflow.python.keras import losses
 from tensorflow.python.keras import models
-from tensorflow.keras.applications import InceptionV3
+from tensorflow.keras.applications import InceptionV3, MobileNet
 from tensorflow.python.keras import backend as K
 
 
@@ -168,12 +167,11 @@ class InceptionModelGenerator(object):
     def __init__(self, model_file, num_classes, input_image_size):
         self.inception_model = None
         if not gfile.Exists(model_file) or input_image_size != (256, 256, 3):
-            print("need download the Inception V3 Model")
-            print(input_image_size)
-            print(input_image_size != (256, 256, 3))
-            print(gfile.Exists(model_file))
+            print("need download the model")
             inception = InceptionV3(weights='imagenet', input_shape=input_image_size)
             self.inception_model = models.Model(inputs=inception.input, outputs=inception.get_layer('avg_pool').output)
+            print("save the downloaded model for reuse")
+            inception.save(model_file)
         else:
             self.inception_model = models.load_model(model_file)
         # add one more class indicating no objects found
@@ -195,3 +193,34 @@ class InceptionModelGenerator(object):
 #----------------------------------------------------------------------------------------------------------------------
 
 
+#------------------------------------------ MobileNet Model ----------------------------------------------------
+class MobileNetModelGenerator(object):
+    @staticmethod
+    def get_optimizer(learning_rate):
+        return tf.keras.optimizers.Adam(lr=learning_rate)
+
+    def __init__(self, model_file, num_classes, input_image_size):
+        if not gfile.Exists(model_file) or input_image_size != (224, 224, 3):
+            print("need download the model")
+            mobile_net = MobileNet(weights='imagenet', input_shape=input_image_size)
+            self.mobile_net_model = models.Model(inputs=mobile_net.input,
+                                                 outputs=mobile_net.get_layer('global_average_pooling2d').output)
+            print("save the downloaded model for reuse")
+            mobile_net.save(model_file)
+        else:
+            self.mobile_net_model = models.load_model(model_file)
+        classes = num_classes
+        self.inputs = layers.Input(shape=(1024,))
+        self.outputs = layers.Dense(classes, activation='softmax', name='final_output')(self.inputs)
+        self.one_layer_model = models.Model(inputs=[self.inputs], outputs=[self.outputs])
+        final_output = layers.Dense(classes, activation='softmax', name='final_output')(self.mobile_net_model.output)
+        self.final_model = models.Model(inputs=self.mobile_net_model.inputs, outputs=final_output)
+
+    def get_bottleneck_model(self):
+        return self.mobile_net_model
+
+    def get_train_model(self):
+        return self.one_layer_model
+
+    def get_eval_model(self):
+        return self.final_model
